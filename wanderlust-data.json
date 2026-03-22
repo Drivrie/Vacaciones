@@ -1,8 +1,8 @@
 {
   "_wl": 1,
   "_v": "4.1",
-  "_exported": "2026-03-22T13:14:47.554Z",
-  "_lastSaved": "2026-03-22T13:14:47.554Z",
+  "_exported": "2026-03-22T13:15:51.167Z",
+  "_lastSaved": "2026-03-22T13:15:51.167Z",
   "origin": "Bydgoszcz",
   "oC": {
     "lat": 53.12,
@@ -11,14 +11,7 @@
   "totalD": 42,
   "enjoyD": 0,
   "alertEmail": "",
-  "vacs": [
-    {
-      "start": "2026-07-16",
-      "end": "2026-09-01",
-      "desc": "Vacaciones",
-      "dest": ""
-    }
-  ],
+  "vacs": [],
   "visited": [
     "gdansk",
     "cracovia",
