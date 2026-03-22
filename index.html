@@ -1,0 +1,2909 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#08090d">
+<title>Wanderlust · Planeador de Vacaciones</title>
+<!-- EmailJS SDK — sends emails from browser without a server -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090d;--surf:#10121a;--surf2:#181b24;--surf3:#1f222e;
+  --bdr:#252938;--bdr2:#2e3345;
+  --acc:#e8c87a;--acc2:#7ab8e8;--acc3:#7ae8b8;--acc4:#e87a9a;--acc5:#c47ae8;
+  --txt:#eef0f5;--txt2:#8b8fa8;--txt3:#4a4e62;
+  --r:10px;--rl:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.45}
+body::after{content:'';position:fixed;top:-30%;right:-15%;width:700px;height:700px;background:radial-gradient(circle,rgba(232,200,122,.05) 0%,transparent 65%);pointer-events:none}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 26px;border-bottom:1px solid var(--bdr);background:rgba(16,18,26,.9);backdrop-filter:blur(24px);position:sticky;top:0;z-index:200;gap:12px;flex-wrap:wrap}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;letter-spacing:-.02em;color:var(--acc);white-space:nowrap}
+.logo span{color:var(--txt3);font-weight:400;font-size:.71rem;display:block;font-family:'DM Sans',sans-serif;letter-spacing:.13em;text-transform:uppercase;margin-top:1px}
+.hdr-mid{flex:1;max-width:400px;position:relative}
+.origin-wrap{position:relative}
+.o-pin{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.88rem;z-index:1;pointer-events:none}
+.o-inp{width:100%;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;padding:8px 12px 8px 32px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.84rem;outline:none;transition:border-color .2s}
+.o-inp:focus{border-color:var(--acc)}
+.o-sug{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--surf2);border:1px solid var(--bdr2);border-radius:10px;z-index:300;overflow:hidden;display:none;box-shadow:0 12px 40px rgba(0,0,0,.55)}
+.o-sug.open{display:block}
+.o-sug-item{padding:9px 13px;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--bdr);color:var(--txt2);transition:background .13s}
+.o-sug-item:last-child{border-bottom:none}
+.o-sug-item:hover,.o-sug-item:focus{background:var(--surf3);color:var(--txt)}
+.hdr-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.81rem;font-weight:500;cursor:pointer;border:1px solid var(--bdr);transition:all .18s;text-decoration:none;white-space:nowrap;color:var(--txt)}
+.btn-p{background:var(--acc);color:#08090d;border-color:var(--acc)}.btn-p:hover{background:#f0d494;transform:translateY(-1px);box-shadow:0 5px 18px rgba(232,200,122,.22)}
+.btn-g{background:transparent;color:var(--txt2)}.btn-g:hover{background:var(--surf2);color:var(--txt)}
+.btn-o{background:transparent;color:var(--acc2);border-color:rgba(122,184,232,.35)}.btn-o:hover{background:rgba(122,184,232,.07)}
+.btn-s{padding:5px 11px;font-size:.75rem}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:255px 1fr;min-height:calc(100vh - 65px)}
+
+/* ── SIDEBAR ── */
+.side{border-right:1px solid var(--bdr);padding:16px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;background:var(--surf)}
+.side-sec h3{font-family:'DM Mono',monospace;font-size:.61rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);margin-bottom:9px}
+.vstats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sc{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:11px;text-align:center}
+.sc.full{grid-column:1/-1}.sn{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;line-height:1}.sl{font-size:.65rem;color:var(--txt2);margin-top:3px}
+.sc.av .sn{color:var(--acc)}.sc.en .sn{color:var(--acc3)}.sc.pe .sn{color:var(--acc4)}
+.pbar{height:5px;background:var(--surf3);border-radius:3px;margin-top:9px;overflow:hidden}
+.pfil{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--acc3),var(--acc));transition:width .5s ease}
+.leg{display:flex;flex-direction:column;gap:6px}
+.leg-i{display:flex;align-items:center;gap:8px;font-size:.77rem;color:var(--txt2)}
+.leg-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ig{display:flex;flex-direction:column;gap:4px}
+.ig label{font-size:.72rem;color:var(--txt2)}
+.ig input,.ig select{background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.82rem;width:100%;outline:none;transition:border-color .2s}
+.ig input:focus,.ig select:focus{border-color:var(--acc)}
+.ig select option{background:var(--surf2)}
+
+/* ── MAIN ── */
+.main{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.tabs{display:flex;gap:3px;background:var(--surf);border:1px solid var(--bdr);border-radius:9px;padding:3px;width:fit-content;flex-wrap:wrap}
+.tab{padding:6px 15px;border-radius:7px;font-size:.8rem;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--txt2);transition:all .18s;font-family:'DM Sans',sans-serif}
+.tab.on{background:var(--surf2);color:var(--txt);border:1px solid var(--bdr)}
+.pane{display:none}.pane.on{display:block}
+
+/* ── FILTERS ── */
+.fp{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;margin-bottom:16px}
+.fp-title{font-family:'Playfair Display',serif;font-size:.98rem;font-weight:700;margin-bottom:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fm-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:.68rem;font-weight:500;background:rgba(122,232,184,.07);border:1px solid rgba(122,232,184,.18);color:var(--acc3);font-family:'DM Sans',sans-serif}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px}
+.fg-item label{font-size:.66rem;color:var(--txt2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace}
+.fg-item select{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.81rem;outline:none}
+.fg-item select option{background:var(--surf2)}
+.rng-val{font-family:'DM Mono',monospace;font-size:.74rem;color:var(--acc);margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.chip{padding:3px 9px;border-radius:20px;font-size:.71rem;font-weight:500;border:1px solid var(--bdr);cursor:pointer;background:var(--surf2);color:var(--txt2);transition:all .13s;user-select:none}
+.chip.on{background:rgba(232,200,122,.1);border-color:rgba(232,200,122,.42);color:var(--acc)}
+.chip.on.nat{background:rgba(122,232,184,.09);border-color:rgba(122,232,184,.38);color:var(--acc3)}
+.chip.on.ciu{background:rgba(122,184,232,.09);border-color:rgba(122,184,232,.38);color:var(--acc2)}
+.chip.on.cul{background:rgba(196,122,232,.09);border-color:rgba(196,122,232,.38);color:var(--acc5)}
+.chip.on.pla{background:rgba(232,200,122,.09);border-color:rgba(232,200,122,.38);color:var(--acc)}
+.chip.on.gas{background:rgba(232,122,154,.09);border-color:rgba(232,122,154,.38);color:var(--acc4)}
+.fp-act{display:flex;gap:7px;margin-top:13px;align-items:center;flex-wrap:wrap}
+.rcount{font-size:.72rem;color:var(--txt3);font-family:'DM Mono',monospace}
+
+/* ── TRIP CARDS ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:13px}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden;transition:all .22s;display:flex;flex-direction:column}
+.card:hover{border-color:rgba(232,200,122,.26);transform:translateY(-3px);box-shadow:0 14px 44px rgba(0,0,0,.42)}
+.c-hero{position:relative;padding:16px 16px 11px;background:linear-gradient(135deg,var(--surf2) 0%,var(--surf3) 100%)}
+.c-emo{font-size:1.8rem;margin-bottom:4px;display:block}
+.c-dest{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;line-height:1.2;margin-bottom:2px}
+.c-reg{font-size:.68rem;color:var(--txt3);font-family:'DM Mono',monospace;letter-spacing:.04em}
+.c-tags{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.tb{padding:2px 7px;border-radius:20px;font-size:.61rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.tb-nat{background:rgba(122,232,184,.13);color:var(--acc3);border:1px solid rgba(122,232,184,.28)}
+.tb-ciu{background:rgba(122,184,232,.13);color:var(--acc2);border:1px solid rgba(122,184,232,.28)}
+.tb-cul{background:rgba(196,122,232,.13);color:var(--acc5);border:1px solid rgba(196,122,232,.28)}
+.tb-pla{background:rgba(232,200,122,.13);color:var(--acc);border:1px solid rgba(232,200,122,.28)}
+.tb-gas{background:rgba(232,122,154,.13);color:var(--acc4);border:1px solid rgba(232,122,154,.28)}
+.tb-ski{background:rgba(122,184,232,.11);color:var(--acc2);border:1px solid rgba(122,184,232,.23)}
+.tb-rur{background:rgba(122,232,184,.09);color:#a0e8c0;border:1px solid rgba(122,232,184,.2)}
+.c-body{padding:11px 16px;flex:1;display:flex;flex-direction:column;gap:8px}
+.c-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.c-ml{font-size:.59rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace}
+.c-mv{font-size:.79rem;color:var(--txt);font-weight:500}
+.c-desc{font-size:.77rem;color:var(--txt2);line-height:1.55;flex:1}
+.c-hl{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}
+.hl{padding:2px 6px;border-radius:9px;font-size:.61rem;background:var(--surf3);color:var(--txt2);border:1px solid var(--bdr)}
+.c-tp{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+.tpil{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:500;border:1px solid currentColor;opacity:.72}
+.tp-car{color:var(--acc)}.tp-bus{color:var(--acc3)}.tp-trn{color:var(--acc2)}.tp-fly{color:var(--acc4)}
+.c-foot{padding:9px 16px 13px;border-top:1px solid var(--bdr);display:flex;gap:5px;flex-wrap:wrap}
+.bl{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-size:.69rem;font-weight:600;text-decoration:none;transition:all .18s;border:1px solid}
+.bl-hot{background:rgba(122,232,184,.07);border-color:rgba(122,232,184,.2);color:var(--acc3)}.bl-hot:hover{background:rgba(122,232,184,.15);transform:translateY(-1px)}
+.bl-fly{background:rgba(232,122,154,.07);border-color:rgba(232,122,154,.2);color:var(--acc4)}.bl-fly:hover{background:rgba(232,122,154,.15);transform:translateY(-1px)}
+.bl-trn{background:rgba(122,184,232,.07);border-color:rgba(122,184,232,.2);color:var(--acc2)}.bl-trn:hover{background:rgba(122,184,232,.15);transform:translateY(-1px)}
+.bl-bus{background:rgba(196,122,232,.07);border-color:rgba(196,122,232,.2);color:var(--acc5)}.bl-bus:hover{background:rgba(196,122,232,.15);transform:translateY(-1px)}
+.bl-map{background:rgba(232,200,122,.07);border-color:rgba(232,200,122,.2);color:var(--acc)}.bl-map:hover{background:rgba(232,200,122,.15);transform:translateY(-1px)}
+
+/* ── CALENDAR ── */
+.cal-wrap{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bdr)}
+.cal-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700}
+.cnb{background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;padding:5px 11px;cursor:pointer;color:var(--txt);font-size:.86rem;transition:all .18s}.cnb:hover{background:var(--surf3)}
+.cal-grid{padding:13px 18px 18px}
+.cal-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:5px}
+.cal-wkd{text-align:center;font-family:'DM Mono',monospace;font-size:.59rem;letter-spacing:.08em;text-transform:uppercase;color:var(--txt3);padding:6px 0}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.day{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.79rem;cursor:pointer;border:1px solid transparent;transition:all .13s;min-height:38px}
+.day:hover:not(.oth):not(.emp){background:var(--surf2);border-color:var(--bdr)}
+.day.tod{border-color:var(--acc);background:rgba(232,200,122,.07)}.day.tod .dn{color:var(--acc);font-weight:700}
+.day.hol{background:rgba(232,122,154,.09);border-color:rgba(232,122,154,.22)}.day.hol .dn{color:var(--acc4)}
+.day.hol.pl{background:rgba(196,122,232,.09);border-color:rgba(196,122,232,.22)}.day.hol.pl .dn{color:var(--acc5)}
+.day.vac{background:rgba(122,232,184,.09);border-color:rgba(122,232,184,.22)}.day.vac .dn{color:var(--acc3)}
+.day.wkn:not(.hol):not(.vac){background:rgba(74,78,98,.07)}.day.wkn:not(.hol):not(.vac) .dn{color:var(--txt2)}
+.day.oth{opacity:.2;cursor:default}.day.emp{cursor:default}
+.dn{font-size:.79rem;font-weight:500;line-height:1}
+.ddots{display:flex;gap:2px;margin-top:2px}.ddot{width:3px;height:3px;border-radius:50%}
+
+/* ── WEEKEND OPPS ── */
+.wopps{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px}
+.op-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bdr);gap:9px}.op-item:last-child{border-bottom:none}
+.op-dt{font-family:'DM Mono',monospace;font-size:.69rem;color:var(--acc2);margin-bottom:2px}
+.op-nm{font-size:.85rem;font-weight:500;margin-bottom:1px}
+.op-info{font-size:.69rem;color:var(--txt2)}
+.op-links{display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.op-link{padding:2px 7px;border-radius:5px;font-size:.65rem;font-weight:600;text-decoration:none;border:1px solid;transition:all .13s}
+
+/* ── HOLIDAYS ── */
+.hol-country-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.hct{padding:5px 13px;border-radius:20px;font-size:.77rem;font-weight:500;cursor:pointer;border:1px solid var(--bdr);background:var(--surf2);color:var(--txt2);transition:all .15s}
+.hct.on{border-color:var(--acc);background:rgba(232,200,122,.09);color:var(--acc)}
+.hct.pl.on{border-color:var(--acc5);background:rgba(196,122,232,.09);color:var(--acc5)}
+.hol-list{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto}
+.hi{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;font-size:.78rem}
+.hi-type{font-size:.6rem;padding:2px 6px;border-radius:9px;font-weight:600}
+.hi-type.es{background:rgba(232,122,154,.1);color:var(--acc4)}
+.hi-type.pl{background:rgba(196,122,232,.1);color:var(--acc5)}
+.hi-type.aut{background:rgba(122,184,232,.1);color:var(--acc2)}
+.hi-type.loc{background:rgba(232,200,122,.1);color:var(--acc)}
+.hi-date{font-family:'DM Mono',monospace;font-size:.69rem}
+.delbtn{background:none;border:none;cursor:pointer;color:var(--txt3);padding:2px 5px;border-radius:4px;transition:all .18s}.delbtn:hover{color:var(--acc4);background:rgba(232,122,154,.1)}
+
+/* ── MODAL ── */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.76);backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+.mover.open{opacity:1;pointer-events:all}
+.modal{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);width:100%;max-width:510px;max-height:90vh;overflow-y:auto;transform:translateY(18px);transition:transform .22s}
+.mover.open .modal{transform:translateY(0)}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--bdr)}
+.mtitle{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700}
+.mclose{background:var(--surf2);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--txt2);font-size:.88rem;transition:all .18s}.mclose:hover{background:var(--surf3);color:var(--txt)}
+.mbody{padding:18px;display:flex;flex-direction:column;gap:13px;overflow-y:auto}
+.mfoot{display:flex;gap:7px;justify-content:flex-end;padding:11px 18px 18px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── ALERTS / SHEETS ── */
+.ac{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;display:flex;flex-direction:column;gap:12px}
+.tgsw{display:flex;align-items:center;gap:9px;cursor:pointer}.tgsw input{display:none}
+.tgtr{width:34px;height:19px;background:var(--surf3);border-radius:9px;position:relative;transition:background .18s;border:1px solid var(--bdr);flex-shrink:0}
+.tgtr::after{content:'';position:absolute;width:13px;height:13px;background:var(--txt2);border-radius:50%;top:2px;left:2px;transition:all .18s}
+input:checked+.tgtr{background:rgba(232,200,122,.2);border-color:var(--acc)}input:checked+.tgtr::after{left:17px;background:var(--acc)}
+.tglbl{font-size:.81rem}
+.tipb{background:rgba(122,184,232,.04);border:1px solid rgba(122,184,232,.15);border-radius:8px;padding:9px 12px;font-size:.76rem;color:var(--acc2);line-height:1.5}
+.sts{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:.73rem;font-weight:500}
+.sts.ok{background:rgba(122,232,184,.09);color:var(--acc3)}.sts.ko{background:rgba(232,122,154,.09);color:var(--acc4)}
+.sdot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ── TOAST ── */
+.toasts{position:fixed;bottom:18px;right:18px;z-index:2000;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:11px 15px;font-size:.8rem;max-width:295px;display:flex;align-items:center;gap:7px;box-shadow:0 8px 30px rgba(0,0,0,.42);animation:tI .28s ease,tO .28s ease 3.7s forwards}
+.toast.ok{border-color:rgba(122,232,184,.3)}.toast.ok .ti{color:var(--acc3)}
+.toast.inf{border-color:rgba(122,184,232,.3)}.toast.inf .ti{color:var(--acc2)}
+.toast.warn{border-color:rgba(232,200,122,.3)}.toast.warn .ti{color:var(--acc)}
+@keyframes tI{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes tO{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:7px}
+.st{font-family:'Playfair Display',serif;font-size:1.08rem;font-weight:700}
+.noret{grid-column:1/-1;text-align:center;padding:42px 20px;color:var(--txt2)}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px}
+* { -webkit-tap-highlight-color: transparent; }
+.side,.main,.modal,.hol-list,.grid { -webkit-overflow-scrolling: touch; }
+/* ── GITHUB SYNC BANNER ── */
+.gh-sync-banner{background:linear-gradient(135deg,rgba(122,184,232,.06),rgba(122,232,184,.04));border:1px solid rgba(122,184,232,.2);border-radius:var(--rl);padding:18px;margin-bottom:4px}
+.gh-sync-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.gh-sync-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:4px}
+.gh-sync-sub{font-size:.76rem;color:var(--txt2);line-height:1.5;max-width:460px}
+.gh-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gh-token-col{grid-column:1/-1}
+@media(max-width:480px){.gh-fields{grid-template-columns:1fr}}
+
+/* ── ADAPTIVE LAYOUT — device class on <html> ── */
+/* Desktop: html.dev-desktop */
+html.dev-desktop .side{display:flex}
+html.dev-desktop .side-toggle{display:none!important}
+html.dev-desktop .mob-nav{display:none!important}
+html.dev-desktop .tabs{display:flex!important}
+html.dev-desktop .main{padding-bottom:20px!important}
+
+/* Tablet: html.dev-tablet */
+html.dev-tablet .app{grid-template-columns:240px 1fr}
+html.dev-tablet .side{display:flex!important;max-height:none!important;padding:16px!important;overflow-y:auto}
+html.dev-tablet .side-toggle{display:none!important}
+html.dev-tablet .tabs{display:flex!important}
+html.dev-tablet .mob-nav{display:none!important}
+html.dev-tablet .main{padding-bottom:20px!important}
+html.dev-tablet .grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+
+/* Phone: html.dev-phone — uses the mobile CSS already defined */
+html.dev-phone .app{grid-template-columns:1fr}
+
+/* ── Device badge (shown briefly on load) ── */
+.dev-badge{position:fixed;top:76px;right:14px;z-index:500;background:var(--surf2);border:1px solid var(--bdr);border-radius:20px;padding:4px 12px;font-size:.69rem;font-family:'DM Mono',monospace;color:var(--txt2);opacity:0;transition:opacity .3s;pointer-events:none}
+.dev-badge.show{opacity:1}
+
+/* ── Working days info pill ── */
+.wday-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:10px;background:rgba(122,232,184,.1);border:1px solid rgba(122,232,184,.2);color:var(--acc3);font-size:.71rem;font-family:'DM Mono',monospace}
+
+/* ── Vacation list in sidebar ── */
+.vac-item{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;font-size:.77rem;margin-bottom:5px;cursor:pointer;transition:border-color .15s}
+.vac-item:hover{border-color:var(--acc3)}
+.vac-item-title{font-weight:600;color:var(--acc3);margin-bottom:2px}
+.vac-item-meta{color:var(--txt2);font-size:.69rem}
+
+/* ── SYNC PANEL ── */
+.sync-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;margin-top:13px}
+.sync-panel h3{font-family:'Playfair Display',serif;font-size:.98rem;margin-bottom:4px}
+.sync-panel p{font-size:.75rem;color:var(--txt2);margin-bottom:14px;line-height:1.5}
+.sync-methods{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:700px){.sync-methods{grid-template-columns:1fr}}
+.sync-card{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:9px}
+.sync-card-title{font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:7px}
+.sync-card-desc{font-size:.72rem;color:var(--txt2);line-height:1.5;flex:1}
+.sync-card-actions{display:flex;gap:5px;flex-wrap:wrap}
+.sync-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.sb-easy{background:rgba(122,232,184,.12);color:var(--acc3);border:1px solid rgba(122,232,184,.25)}
+.sb-med{background:rgba(232,200,122,.12);color:var(--acc);border:1px solid rgba(232,200,122,.25)}
+.sb-adv{background:rgba(196,122,232,.12);color:var(--acc5);border:1px solid rgba(196,122,232,.25)}
+.gs-status-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.drop-zone{border:2px dashed var(--bdr2);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all .18s;font-size:.8rem;color:var(--txt2)}
+.drop-zone:hover,.drop-zone.over{border-color:var(--acc);background:rgba(232,200,122,.04);color:var(--txt)}
+.import-warning{font-size:.71rem;color:var(--acc4);margin-top:5px;display:flex;align-items:center;gap:5px}
+
+
+
+.hdr-sync-dot {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: .72rem;
+  background: var(--surf2);
+  border: 1px solid var(--bdr);
+  color: var(--txt2);
+  transition: all .18s;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.hdr-sync-dot:hover { background: var(--surf3); }
+.hdr-sync-dot.ok { border-color: rgba(122,232,184,.3); color: var(--acc3); }
+.hdr-sync-dot.warn { border-color: rgba(232,200,122,.3); color: var(--acc); }
+.hdr-sync-dot.err { border-color: rgba(232,122,154,.3); color: var(--acc4); }
+
+.fg-full { grid-column: 1 / -1; }
+.fp .chips { margin-top: 3px; }
+
+/* Visited destination badge on card */
+.card.visited-dest { opacity: .55; }
+.card.visited-dest:hover { opacity: 1; }
+.visited-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 10px; font-size: .62rem; font-weight: 700;
+  background: rgba(122,184,232,.12); color: var(--acc2);
+  border: 1px solid rgba(122,184,232,.25);
+}
+.visited-badge-no {
+  background: rgba(122,232,184,.12); color: var(--acc3);
+  border: 1px solid rgba(122,232,184,.25);
+}
+.btn-visit {
+  padding: 5px 10px; font-size: .69rem; font-weight: 600;
+  border-radius: 6px; cursor: pointer; border: 1px solid;
+  transition: all .18s; display: inline-flex; align-items: center; gap: 4px;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-visit.mark {
+  background: rgba(122,184,232,.08); border-color: rgba(122,184,232,.3);
+  color: var(--acc2);
+}
+.btn-visit.mark:hover { background: rgba(122,184,232,.18); }
+.btn-visit.unmark {
+  background: rgba(232,122,154,.08); border-color: rgba(232,122,154,.3);
+  color: var(--acc4);
+}
+.btn-visit.unmark:hover { background: rgba(232,122,154,.18); }
+
+/* Active filter pills */
+.f-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px 3px 10px; border-radius: 20px; font-size: .71rem; font-weight: 500;
+  background: rgba(232,200,122,.1); border: 1px solid rgba(232,200,122,.3);
+  color: var(--acc); cursor: pointer;
+}
+.f-pill:hover { background: rgba(232,200,122,.2); }
+.f-pill .remove { font-size: .75rem; opacity: .7; }
+
+/* Visited management modal list */
+.vlist { display: flex; flex-direction: column; gap: 5px; max-height: 340px; overflow-y: auto; }
+.vlist-item { display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 11px; background: var(--surf2); border: 1px solid var(--bdr);
+  border-radius: 8px; font-size: .82rem; }
+
+/* Holiday filters responsive */
+.hol-filters-grid { grid-template-columns: 1fr 1fr 1fr; }
+@media(max-width:600px){ .hol-filters-grid { grid-template-columns: 1fr 1fr !important; } }
+@media(max-width:380px){ .hol-filters-grid { grid-template-columns: 1fr !important; } }
+/* tap active feedback */
+.btn.tap,.tab.tap,.chip.tap,.cnb.tap,.mob-tab.tap,.hct.tap { opacity:.7; }
+/* ══════════════════════════════════════════
+   MOBILE-FIRST RESPONSIVE  
+   Target: iPhone 12 mini (375px) · Honor Tablet (800px+)
+   ══════════════════════════════════════════ */
+
+/* ── Touch targets: minimum 44×44px on all interactive elements ── */
+.btn, .tab, .chip, .cnb, .hct, .delbtn, .mclose, .tgsw {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.chip { min-height: 36px; }
+.btn-s { min-height: 40px; }
+.delbtn { min-height: 36px; min-width: 36px; justify-content: center; }
+
+/* ── Sidebar toggle button (mobile only, hidden on desktop) ── */
+.side-toggle {
+  display: none;
+  background: var(--surf2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--txt2);
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  min-height: 40px;
+}
+.side-toggle:active { background: var(--surf3); }
+
+/* ── Calendar day cells — bigger on touch ── */
+.day { min-height: 44px; border-radius: 8px; }
+.dn { font-size: .85rem; }
+
+/* ── Bottom nav bar (mobile only) ── */
+.mob-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(16,18,26,.97);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--bdr);
+  z-index: 150;
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mob-nav-inner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.mob-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 4px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--txt3);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .6rem;
+  font-weight: 500;
+  transition: color .15s;
+  min-height: 56px;
+}
+.mob-tab .mob-icon { font-size: 1.3rem; line-height: 1; }
+.mob-tab.on { color: var(--acc); }
+.mob-tab:active { color: var(--txt); }
+
+/* ── Tablet: 600–860px ── */
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .side {
+    border-right: none;
+    border-bottom: 1px solid var(--bdr);
+    padding: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .3s ease, padding .3s ease;
+  }
+  .side.open {
+    max-height: 800px;
+    padding: 16px;
+  }
+  .side-toggle { display: inline-flex; }
+  .main { padding: 14px 14px 80px; } /* bottom padding for mob-nav */
+  .grid { grid-template-columns: 1fr; }
+  .frow { grid-template-columns: 1fr; }
+  .fg { grid-template-columns: 1fr 1fr; }
+  .tabs { display: none; } /* hide desktop tabs — use mob-nav instead */
+  .mob-nav { display: block; }
+  .sync-methods { grid-template-columns: 1fr; }
+  .hdr-actions { gap: 5px; }
+  .hdr-actions .btn-o { display: none; } /* hide Sheets button on mobile — accessible via alerts tab */
+}
+
+/* ── Phone: ≤480px (iPhone 12 mini = 375px) ── */
+@media (max-width: 480px) {
+  .hdr { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; }
+  .logo { font-size: 1.15rem; }
+  .logo span { display: none; } /* hide subtitle on very small screens */
+  .hdr-mid { order: 3; width: 100%; flex: none; }
+  .hdr { flex-wrap: wrap; }
+  .fg { grid-template-columns: 1fr; }
+  .cal-grid { padding: 10px 12px 14px; }
+  .cal-nav { padding: 12px 14px; }
+  .cal-title { font-size: 1rem; }
+  .cal-wkd { font-size: .58rem; padding: 5px 0; }
+  .day { min-height: 42px; border-radius: 6px; }
+  .dn { font-size: .78rem; }
+  .ddot { width: 3px; height: 3px; }
+  .c-meta { grid-template-columns: 1fr 1fr; gap: 6px; }
+  /* Trip cards: limit to single column with smaller padding */
+  .card { border-radius: 12px; }
+  .c-hero { padding: 13px 13px 10px; }
+  .c-body { padding: 10px 13px; }
+  .c-foot { padding: 8px 13px 12px; flex-wrap: wrap; gap: 4px; }
+  .bl { padding: 6px 9px; font-size: .72rem; }
+  /* Filters: compact */
+  .fp { padding: 13px; }
+  .chips { gap: 5px; }
+  .chip { padding: 6px 10px; font-size: .73rem; }
+  /* Modal: full screen on small phones */
+  .mover { padding: 0; align-items: flex-end; }
+  .modal { border-radius: 16px 16px 0 0; max-height: 92vh; max-width: 100%; }
+  /* Weekend opps: stack links vertically */
+  .op-item { flex-wrap: wrap; }
+  .op-links { width: 100%; justify-content: flex-start; margin-top: 5px; }
+  /* Toasts: full width */
+  .toasts { left: 12px; right: 12px; bottom: 70px; }
+  .toast { max-width: 100%; }
+  /* Holiday filters: 2 col then 1 col */
+  #holFilters { grid-template-columns: 1fr 1fr !important; }
+  /* Stat cards: slightly tighter */
+  .sn { font-size: 1.6rem; }
+  /* Header action buttons: icons only */
+  .hdr-actions .btn-g span { display: none; }
+}
+
+/* ── Very small (≤360px) ── */
+@media (max-width: 360px) {
+  .hdr { padding: 8px 10px; }
+  .logo { font-size: 1rem; }
+  .day { min-height: 38px; }
+  .dn { font-size: .72rem; }
+  .mob-tab { font-size: .55rem; }
+  .mob-tab .mob-icon { font-size: 1.15rem; }
+}
+
+/* ── iOS safe areas ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .main { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .mob-nav { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* ── Remove hover effects on touch (avoids sticky hover on iOS) ── */
+@media (hover: none) {
+  .card:hover { transform: none; box-shadow: none; border-color: var(--bdr); }
+  .btn-p:hover { transform: none; box-shadow: none; }
+  .bl:hover { transform: none; }
+  .cnb:hover { background: var(--surf2); }
+}
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo">Wanderlust<span>Planeador de Vacaciones</span></div>
+  <div class="hdr-mid">
+    <div class="origin-wrap">
+      <span class="o-pin">📍</span>
+      <input class="o-inp" id="oInp" placeholder="Ciudad o dirección de origen…" autocomplete="off" oninput="onOInp()" onblur="applyOriginInput()" onkeydown="if(event.key==='Enter'){applyOriginInput();this.blur()}">
+      <div class="o-sug" id="oSug"></div>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <button class="side-toggle" id="sideToggle" onclick="toggleSide()">☰ <span>Resumen</span></button>
+    <div id="hdrSyncDot" class="hdr-sync-dot" title="Estado de sincronización" onclick="swTab('alr')" style="display:none">
+      <span id="hdrSyncIcon">☁️</span>
+    </div>
+    <button class="btn btn-g btn-s" onclick="openM('mSet')">⚙️</button>
+    <button class="btn btn-p btn-s" onclick="openM('mVac')">＋</button>
+  </div>
+</header>
+
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="side" id="sideEl">
+  <div class="side-sec">
+    <h3>Días de vacaciones</h3>
+    <div class="vstats">
+      <div class="sc full av"><div class="sn" id="sTotal">22</div><div class="sl">Total disponibles</div></div>
+      <div class="sc en"><div class="sn" id="sEnj">0</div><div class="sl">Disfrutados<br><span style="font-size:.58rem;opacity:.7">días hábiles</span></div></div>
+      <div class="sc pe"><div class="sn" id="sPen">22</div><div class="sl">Pendientes</div></div>
+    </div>
+    <div class="pbar"><div class="pfil" id="pFil" style="width:0%"></div></div>
+    <div style="font-size:.65rem;color:var(--txt3);margin-top:4px;text-align:right" id="pTxt">0 de 22 días usados</div>
+  </div>
+  <div class="side-sec">
+    <h3>Ajustar días</h3>
+    <div class="ig"><label>Total disponibles</label><input type="number" id="inpTot" value="22" min="0" max="60" onchange="updStats()"></div>
+    <div class="ig" style="margin-top:6px"><label>Días disfrutados</label><input type="number" id="inpEnj" value="0" min="0" onchange="updStats()"></div>
+  </div>
+  <div class="side-sec">
+    <h3>Leyenda</h3>
+    <div class="leg">
+      <div class="leg-i"><div class="leg-d" style="background:var(--acc4)"></div>Festivo España 🇪🇸</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--acc5)"></div>Festivo Polonia 🇵🇱</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--acc3)"></div>Vacación personal</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--acc)"></div>Hoy</div>
+      <div class="leg-i"><div class="leg-d" style="background:var(--txt3)"></div>Fin de semana</div>
+    </div>
+  </div>
+  <div class="side-sec" id="vacListSec">
+    <h3>Mis vacaciones</h3>
+    <div id="vacList" style="max-height:180px;overflow-y:auto"></div>
+  </div>
+  <div class="side-sec">
+    <h3>Email de alertas</h3>
+    <div class="ig"><label>Email</label><input type="email" id="aEmail" placeholder="tu@email.com"></div>
+    <button class="btn btn-g btn-s" style="margin-top:6px;width:100%;justify-content:center" onclick="saveEmail()">💾 Guardar</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="tabs">
+    <button class="tab on" onclick="swTab('cal')">📅 Calendario</button>
+    <button class="tab" onclick="swTab('trips')">✈️ Destinos</button>
+    <button class="tab" onclick="swTab('hols')">🎉 Festivos</button>
+    <button class="tab" onclick="swTab('alr')">🔔 Alertas</button>
+  </div>
+
+  <!-- ═══ CALENDARIO ═══ -->
+  <div id="pane-cal" class="pane on">
+    <div class="cal-wrap">
+      <div class="cal-nav">
+        <button class="cnb" onclick="chMo(-1)">← Anterior</button>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="cal-title" id="calTit"></div><div id="calFilterBadge" style="font-size:.67rem;font-family:'DM Mono',monospace;color:var(--txt3);letter-spacing:.06em"></div></div>
+        <button class="cnb" onclick="chMo(1)">Siguiente →</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-wk">
+          <div class="cal-wkd">Lun</div><div class="cal-wkd">Mar</div><div class="cal-wkd">Mié</div>
+          <div class="cal-wkd">Jue</div><div class="cal-wkd">Vie</div>
+          <div class="cal-wkd" style="color:var(--acc2)">Sáb</div>
+          <div class="cal-wkd" style="color:var(--acc4)">Dom</div>
+        </div>
+        <div class="cal-days" id="calDays"></div>
+      </div>
+    </div>
+    <div class="wopps" style="margin-top:14px">
+      <div class="sh"><h3 class="st">Escapadas este mes</h3><button class="btn btn-g btn-s" onclick="genWkOpps()">🔄 Actualizar</button></div>
+      <div id="wkOpps"></div>
+    </div>
+  </div>
+
+  <!-- ═══ DESTINOS ═══ -->
+  <div id="pane-trips" class="pane">
+    <div class="fp">
+      <div class="fp-title">🎛️ Filtros de búsqueda
+        <span id="fmBadge" class="fm-badge">✨ Modo libre — todos los destinos</span>
+      </div>
+      <div class="fg">
+
+        <!-- ROW 1: Tipo de viaje -->
+        <div class="fg-item fg-full">
+          <label>Tipo de viaje <span style="color:var(--txt3);font-size:.6rem">(ninguno = todos)</span></label>
+          <div class="chips" id="typeChips">
+            <div class="chip" data-t="nat" onclick="togType(this)">🌿 Naturaleza</div>
+            <div class="chip" data-t="ciu" onclick="togType(this)">🏙️ Ciudad</div>
+            <div class="chip" data-t="cul" onclick="togType(this)">🏛️ Cultura</div>
+            <div class="chip" data-t="pla" onclick="togType(this)">🏖️ Playa</div>
+            <div class="chip" data-t="gas" onclick="togType(this)">🍷 Gastro</div>
+            <div class="chip" data-t="ski" onclick="togType(this)">⛷️ Ski</div>
+            <div class="chip" data-t="rur" onclick="togType(this)">🌾 Rural</div>
+          </div>
+        </div>
+
+        <!-- ROW 2: Transporte -->
+        <div class="fg-item fg-full">
+          <label>Medios de transporte <span style="color:var(--txt3);font-size:.6rem">(desactiva los que no quieres usar)</span></label>
+          <div class="chips" id="tpChips">
+            <div class="chip on" data-tp="car"   onclick="togTp(this)">🚗 Coche</div>
+            <div class="chip on" data-tp="bus"   onclick="togTp(this)">🚌 Autobús</div>
+            <div class="chip on" data-tp="train" onclick="togTp(this)">🚆 Tren</div>
+            <div class="chip on" data-tp="plane" onclick="togTp(this)">✈️ Avión</div>
+          </div>
+        </div>
+
+        <!-- ROW 3: Distancia + Tiempo + Duración + Presupuesto -->
+        <div class="fg-item">
+          <label>Distancia máx. desde origen</label>
+          <input type="range" min="50" max="3000" step="50" value="3000" id="rDist"
+                 oninput="onRng()" style="width:100%;accent-color:var(--acc);margin-top:4px">
+          <div class="rng-val" id="rDistLbl">Sin límite</div>
+        </div>
+
+        <div class="fg-item">
+          <label>Tiempo máx. de viaje</label>
+          <select id="rTime" onchange="applyF()">
+            <option value="0">Sin límite</option>
+            <option value="60">Hasta 1 hora</option>
+            <option value="120">Hasta 2 horas</option>
+            <option value="180">Hasta 3 horas</option>
+            <option value="300">Hasta 5 horas</option>
+            <option value="480">Hasta 8 horas</option>
+          </select>
+        </div>
+
+        <div class="fg-item">
+          <label>Duración ideal del viaje</label>
+          <select id="rDur" onchange="applyF()">
+            <option value="0">Cualquiera</option>
+            <option value="we">Fin de semana (1–2 días)</option>
+            <option value="br">Puente (3–4 días)</option>
+            <option value="wk">Semana (5–7 días)</option>
+            <option value="long">Largo (8+ días)</option>
+          </select>
+        </div>
+
+        <div class="fg-item">
+          <label>Presupuesto por persona</label>
+          <select id="rBudg" onchange="applyF()">
+            <option value="0">Sin límite</option>
+            <option value="130">Económico  ≤130€</option>
+            <option value="260">Moderado   ≤260€</option>
+            <option value="420">Cómodo     ≤420€</option>
+            <option value="700">Premium    ≤700€</option>
+          </select>
+        </div>
+
+        <!-- ROW 4: Visitados + País -->
+        <div class="fg-item">
+          <label>Destinos ya visitados</label>
+          <select id="rVisited" onchange="applyF()">
+            <option value="hide">Ocultar visitados</option>
+            <option value="show">Mostrar todos</option>
+            <option value="only">Solo visitados</option>
+          </select>
+        </div>
+
+        <div class="fg-item">
+          <label>País / Zona</label>
+          <select id="rCountry" onchange="applyF()">
+            <option value="0">Cualquier país</option>
+            <option value="España">España</option>
+            <option value="Portugal">Portugal</option>
+            <option value="Francia">Francia</option>
+            <option value="Italia">Italia</option>
+            <option value="Polonia">Polonia</option>
+            <option value="Alemania">Alemania</option>
+            <option value="Austria">Austria</option>
+            <option value="Países Bajos">Países Bajos</option>
+            <option value="República Checa">República Checa</option>
+            <option value="Suiza">Suiza</option>
+          </select>
+        </div>
+
+      </div><!-- /fg -->
+
+      <div class="fp-act">
+        <button class="btn btn-p btn-s" onclick="applyF()">🔍 Buscar destinos</button>
+        <button class="btn btn-g btn-s" onclick="resetF()">↺ Limpiar filtros</button>
+        <span class="rcount" id="rCount"></span>
+      </div>
+
+      <!-- Active filter pills summary -->
+      <div id="activePills" style="display:none;margin-top:10px;display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+
+    <div class="sh">
+      <h3 class="st" id="tripsTitle">Todos los destinos</h3>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="visitedCount" style="font-size:.72rem;color:var(--txt3);font-family:'DM Mono',monospace"></span>
+        <button class="btn btn-g btn-s" onclick="openM('mManageVisited')" style="font-size:.72rem">✏️ Gestionar visitados</button>
+      </div>
+    </div>
+    <div class="grid" id="tripsGrid"></div>
+  </div>
+
+  <!-- ═══ FESTIVOS ═══ -->
+  <div id="pane-hols" class="pane">
+    <div class="sh"><h3 class="st">Festivos y días especiales</h3>
+      <button class="btn btn-p btn-s" onclick="openM('mHol')">＋ Añadir</button>
+    </div>
+    <div class="hol-country-tabs">
+      <div class="hct on" id="hct-es" onclick="setHolCountry('es')">🇪🇸 España</div>
+      <div class="hct pl" id="hct-pl" onclick="setHolCountry('pl')">🇵🇱 Polonia</div>
+      <div class="hct" id="hct-all" onclick="setHolCountry('all')">🌍 Todos</div>
+    </div>
+    <div class="hol-filters-grid" id="holFilters" style="display:grid;gap:10px;margin-bottom:12px">
+      <div class="ig"><label>Comunidad (España)</label>
+        <select id="regSel" onchange="loadHols()">
+          <option value="nacional">Nacional</option>
+          <option value="madrid" selected>Madrid</option>
+          <option value="cataluna">Cataluña</option>
+          <option value="andalucia">Andalucía</option>
+          <option value="valencia">C. Valenciana</option>
+          <option value="pais_vasco">País Vasco</option>
+          <option value="galicia">Galicia</option>
+          <option value="aragon">Aragón</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+      <div class="ig"><label>Año</label>
+        <select id="yrSel" onchange="loadHols()">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+        </select>
+      </div>
+      <div class="ig"><label>Mostrar</label>
+        <select id="holShow" onchange="renderHolList();renderCal()">
+          <option value="all">Todos</option>
+          <option value="nacional">Solo nacionales</option>
+          <option value="autonómico">Solo autonómicos</option>
+          <option value="local">Solo locales</option>
+        </select>
+      </div>
+    </div>
+    <div class="hol-list" id="holList"></div>
+  </div>
+
+  <!-- ═══ ALERTAS ═══ -->
+  <div id="pane-alr" class="pane">
+    <!-- GitHub Gist Auto-Sync Banner -->
+    <div class="gh-sync-banner">
+      <div class="gh-sync-inner">
+        <div style="min-width:0">
+          <div class="gh-sync-title">☁️ Sincronización automática — GitHub Gist</div>
+          <div class="gh-sync-sub">Tus datos se guardan en un Gist privado de GitHub. Configura una vez y se sincroniza solo en todos tus dispositivos.</div>
+        </div>
+        <span class="sts ko" id="ghSts"><span class="sdot"></span> No conectado</span>
+      </div>
+
+      <!-- Step-by-step setup -->
+      <div style="background:var(--surf3);border-radius:9px;padding:12px 14px;margin:10px 0;font-size:.75rem;line-height:1.8;color:var(--txt2)">
+        <strong style="color:var(--txt);font-size:.78rem">Cómo configurar (1 sola vez):</strong><br>
+        1. Abre <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" style="color:var(--acc2)">github.com/settings/tokens/new</a><br>
+        2. Escribe un nombre: <em>Wanderlust</em> · Expiration: <em>No expiration</em><br>
+        3. En <strong>Select scopes</strong> marca únicamente <strong style="color:var(--acc)">✓ gist</strong><br>
+        4. Pulsa <strong>Generate token</strong> y copia el token (<code>ghp_...</code>)<br>
+        5. Pégalo aquí y pulsa <strong>Conectar</strong> — eso es todo
+      </div>
+
+      <div class="gh-fields">
+        <div class="ig">
+          <label>🔑 Personal Access Token (scope: <strong style="color:var(--acc)">gist</strong>)
+            <a href="https://github.com/settings/tokens/new?scopes=gist&description=Wanderlust+Sync" target="_blank" rel="noopener" style="color:var(--acc2);font-size:.67rem;margin-left:5px">→ Crear token</a>
+          </label>
+          <div style="position:relative">
+            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxx…" autocomplete="off" style="padding-right:44px">
+            <button onclick="toggleTokenVis()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--txt2);font-size:.88rem;padding:4px" id="tokEye">👁</button>
+          </div>
+          <div style="font-size:.67rem;color:var(--txt3);margin-top:3px">Solo necesitas el scope <code>gist</code>. El token se guarda únicamente en este dispositivo.</div>
+        </div>
+        <div class="ig" style="display:none" id="ghGistIdRow">
+          <label>ID del Gist (se rellena automáticamente)</label>
+          <input type="text" id="ghGistId" placeholder="Se genera al conectar…" readonly style="opacity:.6;cursor:default">
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-p btn-s" id="ghConnectBtn" onclick="ghSetup()">🔗 Conectar</button>
+        <button class="btn btn-g btn-s" onclick="ghPull()">⬇ Cargar desde nube</button>
+        <button class="btn btn-g btn-s" onclick="ghPush(false)">⬆ Guardar en nube</button>
+        <button class="btn btn-g btn-s" onclick="ghDisconnect()" style="color:var(--acc4)">✕ Desconectar</button>
+      </div>
+      <div class="tipb" style="margin-top:10px;font-size:.69rem">
+        💡 Los datos se guardan en un <strong>Gist secreto</strong> en tu cuenta de GitHub. Nadie más puede verlo. Al abrir la app en otro dispositivo e introducir el mismo token, los datos se cargan automáticamente.
+      </div>
+    </div>
+    <div class="sh" style="margin-top:18px"><h3 class="st">Configuración de alertas</h3></div>
+    <div class="ac">
+      <div class="ig"><label>Dirección de email</label><input type="email" id="aEmailMain" placeholder="tu@email.com"></div>
+      <div>
+        <p style="font-size:.75rem;color:var(--txt2);margin-bottom:8px">Tipos de alerta</p>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label class="tgsw"><input type="checkbox" id="aWknd" checked><span class="tgtr"></span><span class="tglbl">Escapadas de fin de semana disponibles</span></label>
+          <label class="tgsw"><input type="checkbox" id="aHol" checked><span class="tgtr"></span><span class="tglbl">Festivos próximos (ES + PL) con escapada sugerida</span></label>
+          <label class="tgsw"><input type="checkbox" id="aVac"><span class="tgtr"></span><span class="tglbl">Recordatorio de vacaciones pendientes</span></label>
+          <label class="tgsw"><input type="checkbox" id="aPrice"><span class="tgtr"></span><span class="tglbl">Alertas de precio (vuelos / trenes baratos)</span></label>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:.75rem;color:var(--txt2);margin-bottom:7px">Frecuencia</p>
+        <div class="chips">
+          <div class="chip on" onclick="selFrq(this)">Diaria</div>
+          <div class="chip" onclick="selFrq(this)">Semanal</div>
+          <div class="chip" onclick="selFrq(this)">Mensual</div>
+        </div>
+      </div>
+      <!-- EmailJS configuration -->
+      <div style="border-top:1px solid var(--bdr);padding-top:13px">
+        <p style="font-size:.78rem;font-weight:600;color:var(--txt);margin-bottom:4px">📧 Configuración de envío (EmailJS)</p>
+        <p style="font-size:.73rem;color:var(--txt2);margin-bottom:10px;line-height:1.5">
+          Para recibir alertas reales necesitas una cuenta gratuita en
+          <a href="https://www.emailjs.com" target="_blank" rel="noopener" style="color:var(--acc2)">emailjs.com</a>
+          (100 emails/mes gratis). Crea un servicio de email y una plantilla, y pega los IDs aquí.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <div class="ig">
+            <label>Service ID
+              <a href="https://dashboard.emailjs.com/admin" target="_blank" rel="noopener" style="color:var(--acc2);font-size:.62rem;margin-left:4px">→ Dashboard</a>
+            </label>
+            <input type="text" id="ejsServiceId" placeholder="service_xxxxxxx" autocomplete="off">
+          </div>
+          <div class="ig">
+            <label>Template ID</label>
+            <input type="text" id="ejsTemplateId" placeholder="template_xxxxxxx" autocomplete="off">
+          </div>
+          <div class="ig" style="grid-column:1/-1">
+            <label>Public Key (Account → API Keys)</label>
+            <input type="password" id="ejsPublicKey" placeholder="Tu Public Key de EmailJS" autocomplete="off">
+          </div>
+        </div>
+        <div class="tipb" style="margin-top:9px">
+          📋 <strong>Plantilla recomendada en EmailJS:</strong> Crea una plantilla con variables
+          <code style="background:var(--surf3);padding:1px 5px;border-radius:4px;font-size:.7rem">{{to_email}}</code>
+          <code style="background:var(--surf3);padding:1px 5px;border-radius:4px;font-size:.7rem">{{subject}}</code>
+          <code style="background:var(--surf3);padding:1px 5px;border-radius:4px;font-size:.7rem">{{message}}</code>
+          en el campo "To email", "Subject" y cuerpo respectivamente.
+        </div>
+      </div>
+      <button class="btn btn-p" style="width:fit-content" onclick="saveAlrCfg()">💾 Guardar y probar alertas</button>
+    </div>
+    <!-- ═══ SINCRONIZACIÓN ENTRE DISPOSITIVOS ═══ -->
+    <div class="sync-panel">
+      <h3>🔄 Sincronizar entre dispositivos</h3>
+      <p>Elige cómo quieres compartir tus datos entre ordenadores. Puedes usar más de una opción.</p>
+      <div class="sync-methods">
+
+        <!-- A: JSON -->
+        <div class="sync-card">
+          <div class="sync-card-title">
+            <span>📦 JSON</span>
+            <span class="sync-badge sb-easy">Fácil</span>
+          </div>
+          <div class="sync-card-desc">Exporta todos tus datos a un archivo <code>.json</code>. Guárdalo en Google Drive / Dropbox y ábrelo en el otro ordenador con "Importar".</div>
+          <div class="sync-card-actions">
+            <button class="btn btn-g btn-s" onclick="exportJSON()">⬇ Exportar JSON</button>
+            <button class="btn btn-g btn-s" onclick="document.getElementById('importFile').click()">⬆ Importar JSON</button>
+          </div>
+          <div class="import-warning" id="importWarning" style="display:none">⚠ Esto reemplazará todos tus datos actuales.</div>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+          <div id="importDropZone" class="drop-zone" onclick="document.getElementById('importFile').click()"
+               ondragover="event.preventDefault();this.classList.add('over')"
+               ondragleave="this.classList.remove('over')"
+               ondrop="handleDrop(event)">
+            Arrastra aquí el archivo .json<br>o haz clic para seleccionarlo
+          </div>
+        </div>
+
+        <!-- B: HTML con datos -->
+        <div class="sync-card">
+          <div class="sync-card-title">
+            <span>💾 HTML portable</span>
+            <span class="sync-badge sb-med">Recomendado</span>
+          </div>
+          <div class="sync-card-desc">Genera una copia de este mismo archivo HTML con <strong>todos tus datos ya incrustados</strong>. Guarda ese archivo en Drive y ábrelo en cualquier ordenador sin instalar nada.</div>
+          <div class="sync-card-actions">
+            <button class="btn btn-p btn-s" onclick="saveHTMLWithData()">💾 Guardar HTML con mis datos</button>
+          </div>
+          <div style="font-size:.69rem;color:var(--txt2);margin-top:4px;line-height:1.45">El archivo generado tendrá tus datos precargados. Cada vez que hagas cambios, genera uno nuevo.</div>
+        </div>
+
+        <!-- C: GitHub Gist Auto-Sync (configured in Alerts tab) -->
+        <div class="sync-card">
+          <div class="sync-card-title">
+            <span>☁️ GitHub Gist</span>
+            <span class="sync-badge sb-adv">Recomendado</span>
+          </div>
+          <div class="sync-card-desc">Sincronización automática en tiempo real con GitHub Gist. Los datos se guardan en la nube con cada cambio y se cargan solos al abrir en cualquier dispositivo. Solo necesitas un token con scope <strong>gist</strong>.</div>
+          <div class="gs-status-row">
+            <span class="sts ko" id="ghSts2"><span class="sdot"></span> Ver estado arriba</span>
+          </div>
+          <div class="sync-card-actions">
+            <button class="btn btn-p btn-s" onclick="swTab('alr')">⚙️ Configurar en Alertas</button>
+            <button class="btn btn-g btn-s" onclick="ghPush(false)">⬆ Guardar ahora</button>
+            <button class="btn btn-g btn-s" onclick="ghPull()">⬇ Cargar ahora</button>
+          </div>
+          <div class="tipb" style="margin-top:7px;font-size:.69rem">
+            Token necesario: solo scope <strong style="color:var(--acc)">gist</strong> (no "repo"). Se configura en la pestaña <strong>Alertas → Sincronización GitHub Gist</strong>.
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- old CSV export kept as utility -->
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-g btn-s" onclick="expCSV()">📥 Exportar CSV (para Excel/Sheets)</button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toasts" id="toastBox"></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-nav" id="mobNav">
+  <div class="mob-nav-inner">
+    <button class="mob-tab on" id="mt-cal" onclick="swTab('cal')">
+      <span class="mob-icon">📅</span>Calendario
+    </button>
+    <button class="mob-tab" id="mt-trips" onclick="swTab('trips')">
+      <span class="mob-icon">✈️</span>Destinos
+    </button>
+    <button class="mob-tab" id="mt-hols" onclick="swTab('hols')">
+      <span class="mob-icon">🎉</span>Festivos
+    </button>
+    <button class="mob-tab" id="mt-alr" onclick="swTab('alr')">
+      <span class="mob-icon">🔔</span>Alertas
+    </button>
+  </div>
+</nav>
+
+<div id="devBadge" class="dev-badge"></div>
+
+<!-- ══ MODALS ══ -->
+<div class="mover" id="mManageVisited">
+  <div class="modal" style="max-width:540px">
+    <div class="mhdr">
+      <h2 class="mtitle">✈️ Destinos visitados</h2>
+      <button class="mclose" onclick="closeM('mManageVisited')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="tipb" style="margin-bottom:4px">
+        Marca los destinos que ya has visitado. Podrás ocultarlos o filtrarlos desde el panel de búsqueda.
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap">
+        <input type="text" id="visitedSearch" placeholder="Buscar destino…"
+          oninput="renderVisitedModal()"
+          style="flex:1;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;padding:7px 10px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;min-width:120px">
+        <button class="btn btn-g btn-s" onclick="clearAllVisited()">🗑 Quitar todos</button>
+      </div>
+      <div class="vlist" id="visitedModalList"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="closeM('mManageVisited')">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="mover" id="mGsHelp">
+  <div class="modal" style="max-width:680px">
+    <div class="mhdr"><h2 class="mtitle">📋 Código Apps Script para Google Sheets</h2><button class="mclose" onclick="closeM('mGsHelp')">✕</button></div>
+    <div class="mbody">
+      <div class="tipb" style="margin-bottom:12px">
+        <strong>Instrucciones:</strong><br>
+        1. Abre tu Google Sheets → <strong>Extensiones → Apps Script</strong><br>
+        2. Borra el código existente y pega el código de abajo<br>
+        3. Guarda (Ctrl+S) y haz clic en <strong>Implementar → Nueva implementación</strong><br>
+        4. Tipo: <em>App web</em> · Acceso: <em>Cualquier persona</em><br>
+        5. Copia la URL generada y pégala en el campo del planeador
+      </div>
+      <div style="background:#0d0f14;border:1px solid var(--bdr);border-radius:9px;padding:14px;font-family:'DM Mono',monospace;font-size:.71rem;color:#a0e8c0;line-height:1.7;overflow-x:auto;white-space:pre" id="gsCode">const SHEET_NAME = 'Wanderlust';
+
+function doGet(e) {
+  const action = e.parameter.action;
+  if (action === 'load') return loadData();
+  return ContentService.createTextOutput('{"error":"unknown action"}')
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  if (data.action === 'save') return saveData(data.payload);
+  return ContentService.createTextOutput('{"error":"unknown action"}')
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function loadData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return ContentService.createTextOutput('{"data":null}')
+    .setMimeType(ContentService.MimeType.JSON);
+  const val = sheet.getRange('A1').getValue();
+  return ContentService.createTextOutput(JSON.stringify({data: val}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function saveData(payload) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
+  sheet.getRange('A1').setValue(JSON.stringify(payload));
+  sheet.getRange('A2').setValue(new Date().toISOString());
+  return ContentService.createTextOutput('{"ok":true}')
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+      <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-p btn-s" onclick="copyGsCode()">📋 Copiar código</button>
+        <button class="btn btn-g btn-s" onclick="closeM('mGsHelp')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mover" id="mVac">
+  <div class="modal">
+    <div class="mhdr"><h2 class="mtitle">Añadir vacación</h2><button class="mclose" onclick="closeM('mVac')">✕</button></div>
+    <div class="mbody">
+      <div class="frow">
+        <div class="ig"><label>Fecha inicio</label><input type="date" id="vS" onchange="previewWorkDays()"></div>
+        <div class="ig"><label>Fecha fin</label><input type="date" id="vE" onchange="previewWorkDays()"></div>
+      </div>
+      <div id="wdayPreview" style="display:none">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span class="wday-pill" id="wdayHabil"></span>
+          <span style="font-size:.72rem;color:var(--txt2)" id="wdayCalendar"></span>
+        </div>
+      </div>
+      <div class="ig"><label>Descripción</label><input type="text" id="vD" placeholder="Ej: Vacaciones de verano"></div>
+      <div class="ig"><label>Destino</label><input type="text" id="vDest" placeholder="Ej: Málaga, Costa del Sol"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="closeM('mVac')">Cancelar</button>
+      <button class="btn btn-p" onclick="addVac()">✓ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mover" id="mHol">
+  <div class="modal">
+    <div class="mhdr"><h2 class="mtitle">Añadir festivo</h2><button class="mclose" onclick="closeM('mHol')">✕</button></div>
+    <div class="mbody">
+      <div class="ig"><label>Nombre</label><input type="text" id="hName" placeholder="Ej: Día de la Constitución"></div>
+      <div class="ig"><label>Fecha</label><input type="date" id="hDate"></div>
+      <div class="frow">
+        <div class="ig"><label>País</label>
+          <select id="hCountry"><option value="ES">🇪🇸 España</option><option value="PL">🇵🇱 Polonia</option><option value="BOTH">🌍 Ambos</option></select>
+        </div>
+        <div class="ig"><label>Tipo</label>
+          <select id="hType"><option value="nacional">Nacional</option><option value="autonómico">Autonómico</option><option value="local">Local</option><option value="personal">Personal</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="closeM('mHol')">Cancelar</button>
+      <button class="btn btn-p" onclick="addHol()">✓ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mover" id="mSet">
+  <div class="modal">
+    <div class="mhdr"><h2 class="mtitle">⚙️ Configuración</h2><button class="mclose" onclick="closeM('mSet')">✕</button></div>
+    <div class="mbody">
+      <div class="ig"><label>Ciudad o dirección de origen</label><input type="text" id="sOrigin" placeholder="Madrid, Calle Gran Vía 1…"></div>
+      <div class="ig"><label>País base</label>
+        <select id="sCountry">
+          <option value="ES" selected>España 🇪🇸</option><option value="PL">Polonia 🇵🇱</option>
+          <option value="DE">Alemania 🇩🇪</option><option value="FR">Francia 🇫🇷</option>
+        </select>
+      </div>
+      <div class="ig"><label>Presupuesto máx. por viaje (€)</label><input type="number" id="sBudget" value="400" min="50"></div>
+      <div class="tipb">Los destinos se ordenan por distancia real (Haversine) desde tu ciudad de origen.</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="closeM('mSet')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveSet()">✓ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mover" id="mDay">
+  <div class="modal">
+    <div class="mhdr"><h2 class="mtitle" id="mDayTit">Día</h2><button class="mclose" onclick="closeM('mDay')">✕</button></div>
+    <div class="mbody" id="mDayBody"></div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="closeM('mDay')">Cerrar</button>
+      <button class="btn btn-p" onclick="addVacFromDay()">＋ Marcar como vacación</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DESTINATIONS DATABASE
+// ═══════════════════════════════════════════════════════
+const DESTS = [
+  // España
+  {id:'toledo',name:'Toledo',country:'España',region:'Castilla-La Mancha',emoji:'🏰',types:['ciu','cul'],coords:{lat:39.86,lon:-4.02},transport:['car','bus','train'],desc:'Ciudad imperial Patrimonio UNESCO, catedral gótica, sinagoga del Tránsito y El Greco.',highlights:['Catedral Primada','Alcázar','Sinagoga','Barrio Judío'],budget:120,booking:{hotel:'https://www.booking.com/search.html?ss=Toledo+Spain',bus:'https://www.alsa.com/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Toledo+España'}},
+  {id:'segovia',name:'Segovia',country:'España',region:'Castilla y León',emoji:'🦢',types:['ciu','cul'],coords:{lat:40.95,lon:-4.12},transport:['car','bus','train'],desc:'El Acueducto Romano más imponente de Hispania y el Alcázar que inspiró el castillo de Cenicienta.',highlights:['Acueducto','Alcázar','Catedral','Cochinillo'],budget:130,booking:{hotel:'https://www.booking.com/search.html?ss=Segovia+Spain',bus:'https://www.alsa.com/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Segovia+España'}},
+  {id:'avila',name:'Ávila',country:'España',region:'Castilla y León',emoji:'🛡️',types:['ciu','cul','rur'],coords:{lat:40.65,lon:-4.70},transport:['car','train'],desc:'Murallas medievales del siglo XI, las mejor conservadas de Europa, y ciudad de Santa Teresa.',highlights:['Murallas','Catedral','Santa Teresa','Gredos'],budget:110,booking:{hotel:'https://www.booking.com/search.html?ss=Avila+Spain',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Ávila+España'}},
+  {id:'cuenca',name:'Cuenca',country:'España',region:'Castilla-La Mancha',emoji:'🏠',types:['ciu','cul','nat'],coords:{lat:40.07,lon:-2.13},transport:['car','bus','train'],desc:'Las Casas Colgadas sobre el Huécar, el Museo de Arte Abstracto Español y la Ciudad Encantada.',highlights:['Casas Colgadas','Ciudad Encantada','Arte Abstracto','Hoz del Júcar'],budget:140,booking:{hotel:'https://www.booking.com/search.html?ss=Cuenca+Spain',train:'https://www.renfe.com/',bus:'https://www.alsa.com/',map:'https://maps.google.com/?q=Cuenca+España'}},
+  {id:'salamanca',name:'Salamanca',country:'España',region:'Castilla y León',emoji:'🎓',types:['ciu','cul','gas'],coords:{lat:40.96,lon:-5.66},transport:['car','bus','train'],desc:'La Universidad más antigua de España (1218), Plaza Mayor barroca y la piedra dorada al atardecer.',highlights:['Universidad','Plaza Mayor','Catedral Nueva','La Rana'],budget:155,booking:{hotel:'https://www.booking.com/search.html?ss=Salamanca+Spain',bus:'https://www.alsa.com/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Salamanca+España'}},
+  {id:'cadiz',name:'Cádiz',country:'España',region:'Andalucía',emoji:'⚓',types:['pla','ciu','gas'],coords:{lat:36.53,lon:-6.30},transport:['car','train','bus'],desc:'Ciudad más antigua de Occidente, playa urbana en el centro y el Carnaval más ocurrente de España.',highlights:['Playa La Caleta','Catedral','Carnaval','Freidurías'],budget:170,booking:{hotel:'https://www.booking.com/search.html?ss=Cadiz+Spain',train:'https://www.renfe.com/',bus:'https://www.alsa.com/',map:'https://maps.google.com/?q=Cádiz+España'}},
+  {id:'cordoba',name:'Córdoba',country:'España',region:'Andalucía',emoji:'🌹',types:['ciu','cul','gas'],coords:{lat:37.88,lon:-4.78},transport:['car','train','bus'],desc:'La Mezquita-Catedral, los Patios en Flor de mayo y el barrio judío más recogido de España.',highlights:['Mezquita-Catedral','Patios','Judería','Medina Azahara'],budget:150,booking:{hotel:'https://www.booking.com/search.html?ss=Cordoba+Spain',train:'https://www.renfe.com/',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Córdoba+España'}},
+  {id:'ronda',name:'Ronda',country:'España',region:'Andalucía',emoji:'🌉',types:['ciu','nat','cul'],coords:{lat:36.74,lon:-5.16},transport:['car','bus'],desc:'Un pueblo al borde de un tajo de 100 metros y la plaza de toros más antigua de España.',highlights:['Puente Nuevo','Plaza de Toros','El Tajo','Serranía'],budget:130,booking:{hotel:'https://www.booking.com/search.html?ss=Ronda+Spain',bus:'https://www.alsa.com/',map:'https://maps.google.com/?q=Ronda+España'}},
+  {id:'granada',name:'Granada',country:'España',region:'Andalucía',emoji:'🏔️',types:['ciu','cul','nat','ski'],coords:{lat:37.18,lon:-3.60},transport:['car','bus','plane'],desc:'La Alhambra nazarí, el Albaicín morisco, las tapas gratuitas y la Sierra Nevada para esquiar.',highlights:['Alhambra','Generalife','Albaicín','Sierra Nevada'],budget:180,booking:{hotel:'https://www.booking.com/search.html?ss=Granada+Spain',flight:'https://www.skyscanner.es/',bus:'https://www.alsa.com/',map:'https://maps.google.com/?q=Granada+España'}},
+  {id:'malaga',name:'Málaga',country:'España',region:'Andalucía',emoji:'☀️',types:['pla','ciu','gas','cul'],coords:{lat:36.72,lon:-4.42},transport:['car','train','plane','bus'],desc:'Cuna de Picasso, playas urbanas, el Soho del arte y el espeto de sardinas frente al mar.',highlights:['Museo Picasso','Alcazaba','Playa Malagueta','Espetos'],budget:200,booking:{hotel:'https://www.booking.com/search.html?ss=Malaga+Spain',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Málaga+España'}},
+  {id:'valencia',name:'Valencia',country:'España',region:'C. Valenciana',emoji:'🍊',types:['pla','ciu','gas','cul'],coords:{lat:39.47,lon:-0.38},transport:['car','train','bus','plane'],desc:'Ciudad de las Artes y las Ciencias, paella auténtica en La Albufera y Las Fallas en marzo.',highlights:['Ciudad de las Artes','Paella','Playa Malvarrosa','Las Fallas'],budget:220,booking:{hotel:'https://www.booking.com/search.html?ss=Valencia+Spain',train:'https://www.renfe.com/',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Valencia+España'}},
+  {id:'alicante',name:'Alicante',country:'España',region:'C. Valenciana',emoji:'🌅',types:['pla','ciu','gas'],coords:{lat:38.35,lon:-0.49},transport:['car','train','plane'],desc:'El Castillo de Santa Bárbara sobre el Mediterráneo, el Barrio Santa Cruz y playas de arena fina.',highlights:['Castillo Santa Bárbara','El Postiguet','Barrio Santa Cruz','Tapas'],budget:195,booking:{hotel:'https://www.booking.com/search.html?ss=Alicante+Spain',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Alicante+España'}},
+  {id:'barcelona',name:'Barcelona',country:'España',region:'Cataluña',emoji:'🦎',types:['ciu','cul','pla','gas'],coords:{lat:41.38,lon:2.17},transport:['train','plane','car','bus'],desc:'Gaudí, Barceloneta, el Mercado de La Boqueria y la noche más vibrante del Mediterráneo.',highlights:['Sagrada Familia','Park Güell','Barceloneta','La Boqueria'],budget:300,booking:{hotel:'https://www.booking.com/search.html?ss=Barcelona+Spain',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',bus:'https://www.flixbus.es/',map:'https://maps.google.com/?q=Barcelona+España'}},
+  {id:'bilbao',name:'Bilbao',country:'España',region:'País Vasco',emoji:'🎨',types:['ciu','cul','gas'],coords:{lat:43.26,lon:-2.93},transport:['car','bus','train','plane'],desc:'El Guggenheim de titanio, los pintxos de la Parte Vieja y la mayor transformación urbana de Europa.',highlights:['Guggenheim','Pintxos','Casco Viejo','Mercado Ribera'],budget:250,booking:{hotel:'https://www.booking.com/search.html?ss=Bilbao+Spain',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Bilbao+España'}},
+  {id:'sansebastian',name:'San Sebastián',country:'España',region:'País Vasco',emoji:'🐚',types:['pla','gas','ciu','cul'],coords:{lat:43.32,lon:-1.98},transport:['car','bus','train','plane'],desc:'La bahía de La Concha y más estrellas Michelin por km² que cualquier otra ciudad del mundo.',highlights:['Playa La Concha','Pintxos','Monte Igueldo','Peine del Viento'],budget:280,booking:{hotel:'https://www.booking.com/search.html?ss=San+Sebastian+Spain',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=San+Sebastián+España'}},
+  {id:'santiago',name:'Santiago de Compostela',country:'España',region:'Galicia',emoji:'⛪',types:['ciu','cul','rur'],coords:{lat:42.88,lon:-8.54},transport:['plane','car','bus','train'],desc:'El destino final del Camino, la Catedral más impresionante de España y el pulpo a feira.',highlights:['Catedral','Casco Histórico','Mercado Abastos','Pulpo'],budget:260,booking:{hotel:'https://www.booking.com/search.html?ss=Santiago+de+Compostela+Spain',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Santiago+de+Compostela'}},
+  {id:'pirineos',name:'Pirineos Aragoneses',country:'España',region:'Aragón',emoji:'⛷️',types:['nat','ski','rur'],coords:{lat:42.65,lon:-0.35},transport:['car'],desc:'Ordesa y Monte Perdido UNESCO, Formigal-Panticosa y los pueblos medievales de Ansó y Alquézar.',highlights:['Ordesa','Formigal','Benasque','Alquézar'],budget:220,booking:{hotel:'https://www.booking.com/search.html?ss=Pirineos+Aragon+Spain',map:'https://maps.google.com/?q=Pirineos+Aragoneses'}},
+  {id:'cantabria',name:'Cantabria',country:'España',region:'Cantabria',emoji:'🌊',types:['nat','pla','rur'],coords:{lat:43.18,lon:-3.99},transport:['car','bus'],desc:'Picos de Europa, playas salvajes del Cantábrico, la Cueva de Altamira y avistamiento de ballenas.',highlights:['Picos de Europa','El Sardinero','Altamira','Liébana'],budget:190,booking:{hotel:'https://www.booking.com/search.html?ss=Santander+Spain',bus:'https://www.alsa.com/',map:'https://maps.google.com/?q=Cantabria+España'}},
+  {id:'mallorca',name:'Mallorca',country:'España',region:'Baleares',emoji:'🏝️',types:['pla','nat','gas'],coords:{lat:39.69,lon:3.02},transport:['plane'],desc:'Calas turquesas entre pinos, la Serra de Tramuntana UNESCO y la gastronomía mallorquina.',highlights:['Cala Mondragó','Valldemossa','Palma','Serra Tramuntana'],budget:320,booking:{hotel:'https://www.booking.com/search.html?ss=Mallorca+Spain',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Mallorca+España'}},
+  {id:'ibiza',name:'Ibiza',country:'España',region:'Baleares',emoji:'🌙',types:['pla','gas'],coords:{lat:38.91,lon:1.44},transport:['plane'],desc:'Las mejores calas del Mediterráneo, el casco antiguo Dalt Vila UNESCO y la puesta de sol en Café del Mar.',highlights:['Dalt Vila','Cala Comte','Es Vedrà','Café del Mar'],budget:380,booking:{hotel:'https://www.booking.com/search.html?ss=Ibiza+Spain',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Ibiza+España'}},
+  {id:'extremadura',name:'Cáceres / Mérida',country:'España',region:'Extremadura',emoji:'🦅',types:['cul','ciu','nat'],coords:{lat:39.47,lon:-6.37},transport:['car','bus','train'],desc:'El anfiteatro romano más espectacular de España en Mérida y el casco monumental de Cáceres.',highlights:['Anfiteatro Mérida','Cáceres Monumental','Monfragüe','Dehesa'],budget:155,booking:{hotel:'https://www.booking.com/search.html?ss=Caceres+Spain',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=Cáceres+España'}},
+  // Portugal
+  {id:'lisboa',name:'Lisboa',country:'Portugal',region:'Área Metropolitana',emoji:'🍮',types:['ciu','cul','gas'],coords:{lat:38.72,lon:-9.14},transport:['plane','car','bus'],desc:'Fado, pastéis de nata, los miradores sobre el Tejo y el barrio bohemio de Bairro Alto.',highlights:['Torre de Belém','Alfama','Pastéis de Belém','Sintra'],budget:260,booking:{hotel:'https://www.booking.com/search.html?ss=Lisbon+Portugal',flight:'https://www.skyscanner.es/',bus:'https://www.flixbus.es/',map:'https://maps.google.com/?q=Lisboa+Portugal'}},
+  {id:'oporto',name:'Oporto',country:'Portugal',region:'Norte',emoji:'🍷',types:['ciu','gas','cul'],coords:{lat:41.15,lon:-8.61},transport:['plane','car','bus'],desc:'El vino de Oporto, la Librería Lello donde se inspiró Harry Potter y los azulejos del Duero.',highlights:['Bodegas Gaia','Librería Lello','Ribeira','Valle del Duero'],budget:240,booking:{hotel:'https://www.booking.com/search.html?ss=Porto+Portugal',flight:'https://www.skyscanner.es/',bus:'https://www.flixbus.es/',map:'https://maps.google.com/?q=Porto+Portugal'}},
+  // Europa
+  {id:'paris',name:'París',country:'Francia',region:'Île-de-France',emoji:'🗼',types:['ciu','cul','gas'],coords:{lat:48.85,lon:2.35},transport:['train','plane'],desc:'La Torre Eiffel, el Louvre, Montmartre y los cafés donde el tiempo pasa de otra manera.',highlights:['Torre Eiffel','Louvre','Montmartre','Le Marais'],budget:450,booking:{hotel:'https://www.booking.com/search.html?ss=Paris+France',flight:'https://www.skyscanner.es/',train:'https://www.renfe.com/',map:'https://maps.google.com/?q=París+Francia'}},
+  {id:'roma',name:'Roma',country:'Italia',region:'Lacio',emoji:'🏛️',types:['ciu','cul','gas'],coords:{lat:41.90,lon:12.50},transport:['plane'],desc:'El Coliseo, el Vaticano, la Fontana di Trevi y la pasta cacio e pepe más auténtica del mundo.',highlights:['Coliseo','Vaticano','Fontana di Trevi','Trastevere'],budget:400,booking:{hotel:'https://www.booking.com/search.html?ss=Rome+Italy',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Roma+Italia'}},
+  {id:'amsterdam',name:'Ámsterdam',country:'Países Bajos',region:'Holanda del Norte',emoji:'🚲',types:['ciu','cul'],coords:{lat:52.37,lon:4.90},transport:['plane'],desc:'Canales, bicicletas, el Rijksmuseum con los mejores Rembrandts y el Museo Van Gogh.',highlights:['Rijksmuseum','Canales','Anne Frank','Van Gogh Museum'],budget:420,booking:{hotel:'https://www.booking.com/search.html?ss=Amsterdam+Netherlands',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Ámsterdam'}},
+  {id:'praga',name:'Praga',country:'República Checa',region:'Bohemia',emoji:'🏯',types:['ciu','cul','gas'],coords:{lat:50.08,lon:14.44},transport:['plane'],desc:'El barrio judío más auténtico de Europa, el Puente de Carlos y la cerveza Pilsner Urquell más fresca.',highlights:['Barrio Judío','Puente de Carlos','Castillo de Praga','Cerveza'],budget:320,booking:{hotel:'https://www.booking.com/search.html?ss=Prague+Czech+Republic',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Praga'}},
+  {id:'cracovia',name:'Cracovia',country:'Polonia',region:'Małopolska',emoji:'🐉',types:['ciu','cul'],coords:{lat:50.06,lon:19.94},transport:['plane','train'],desc:'El Castillo de Wawel, el barrio judío de Kazimierz revivido y el mayor mercado medieval de Europa.',highlights:['Castillo de Wawel','Kazimierz','Rynek Główny','Wieliczka'],budget:280,booking:{hotel:'https://www.booking.com/search.html?ss=Krakow+Poland',flight:'https://www.skyscanner.es/',train:'https://www.flixbus.es/',map:'https://maps.google.com/?q=Cracovia'}},
+  {id:'gdansk',name:'Gdansk',country:'Polonia',region:'Pomerania',emoji:'⚓',types:['ciu','cul'],coords:{lat:54.35,lon:18.65},transport:['plane','train'],desc:'La ciudad hanseática del ámbar, la Calle Larga llena de historia y el origen del sindicato Solidarnosc.',highlights:['Calle Larga','Basílica de Santa María','Sopot','Museo Solidaridad'],budget:240,booking:{hotel:'https://www.booking.com/search.html?ss=Gdansk+Poland',flight:'https://www.skyscanner.es/',train:'https://www.flixbus.es/',map:'https://maps.google.com/?q=Gdansk+Polonia'}},
+  {id:'wroclaw',name:'Wrocław',country:'Polonia',region:'Baja Silesia',emoji:'🦔',types:['ciu','cul'],coords:{lat:51.11,lon:17.04},transport:['plane','train'],desc:'La Venecia polaca con 12 islas y más de 100 puentes, los gnomos escondidos por la ciudad y la Plaza del Mercado.',highlights:['Plaza del Mercado','Isla de la Catedral','Gnomos de Wrocław','Universidad'],budget:230,booking:{hotel:'https://www.booking.com/search.html?ss=Wroclaw+Poland',flight:'https://www.skyscanner.es/',train:'https://www.flixbus.es/',map:'https://maps.google.com/?q=Wrocław+Polonia'}},
+  {id:'berlin',name:'Berlín',country:'Alemania',region:'Berlín',emoji:'🐻',types:['ciu','cul'],coords:{lat:52.52,lon:13.41},transport:['plane'],desc:'La Puerta de Brandeburgo, los restos del Muro y la escena de arte contemporáneo más emocionante de Europa.',highlights:['Puerta Brandeburgo','Muro de Berlín','Isla de los Museos','Kreuzberg'],budget:380,booking:{hotel:'https://www.booking.com/search.html?ss=Berlin+Germany',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Berlín+Alemania'}},
+  {id:'viena',name:'Viena',country:'Austria',region:'Viena',emoji:'🎻',types:['ciu','cul','gas'],coords:{lat:48.21,lon:16.37},transport:['plane','train'],desc:'La ópera estatal, el Palacio de Schönbrunn, los cafés imperiales con Strudel y la música que envuelve todo.',highlights:['Ópera Estatal','Schönbrunn','Café Central','Belvedere'],budget:400,booking:{hotel:'https://www.booking.com/search.html?ss=Vienna+Austria',flight:'https://www.skyscanner.es/',train:'https://www.raileurope.com/',map:'https://maps.google.com/?q=Viena+Austria'}},
+  {id:'alpes',name:'Alpes Suizos',country:'Suiza',region:'Bernese Oberland',emoji:'🏔️',types:['nat','ski','rur'],coords:{lat:46.55,lon:7.98},transport:['plane','car'],desc:'El Eiger, la Jungfrau, Interlaken y el pueblo de Grindelwald para esquí o senderismo de ensueño.',highlights:['Jungfraujoch','Grindelwald','Interlaken','Lago Brienz'],budget:550,booking:{hotel:'https://www.booking.com/search.html?ss=Interlaken+Switzerland',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Alpes+Suizos'}},
+  {id:'niza',name:'Costa Azul — Niza',country:'Francia',region:'Côte d\'Azur',emoji:'🌊',types:['pla','gas','ciu'],coords:{lat:43.71,lon:7.27},transport:['car','train'],desc:'Niza, Mónaco, Cannes y Antibes: el glamour de la Riviera francesa y la luz que pintaba Matisse.',highlights:['Niza','Mónaco','Cannes','Antibes'],budget:380,booking:{hotel:'https://www.booking.com/search.html?ss=Nice+France',train:'https://www.raileurope.com/',flight:'https://www.skyscanner.es/',map:'https://maps.google.com/?q=Costa+Azul+Francia'}},
+];
+
+// ═══════════════════════════════════════════════════════
+//  HOLIDAYS DATABASE — España + Polonia
+// ═══════════════════════════════════════════════════════
+const HOLS_DB = {
+  // ── ESPAÑA NACIONAL ──
+  es_nacional_2025: [
+    {date:'2025-01-01',name:'Año Nuevo',type:'nacional',country:'ES'},
+    {date:'2025-01-06',name:'Epifanía del Señor (Reyes Magos)',type:'nacional',country:'ES'},
+    {date:'2025-04-18',name:'Viernes Santo',type:'nacional',country:'ES'},
+    {date:'2025-05-01',name:'Fiesta del Trabajo',type:'nacional',country:'ES'},
+    {date:'2025-08-15',name:'Asunción de la Virgen',type:'nacional',country:'ES'},
+    {date:'2025-10-12',name:'Fiesta Nacional de España',type:'nacional',country:'ES'},
+    {date:'2025-11-01',name:'Todos los Santos',type:'nacional',country:'ES'},
+    {date:'2025-12-06',name:'Día de la Constitución Española',type:'nacional',country:'ES'},
+    {date:'2025-12-08',name:'Inmaculada Concepción',type:'nacional',country:'ES'},
+    {date:'2025-12-25',name:'Natividad del Señor (Navidad)',type:'nacional',country:'ES'},
+  ],
+  es_nacional_2026: [
+    {date:'2026-01-01',name:'Año Nuevo',type:'nacional',country:'ES'},
+    {date:'2026-01-06',name:'Epifanía del Señor (Reyes Magos)',type:'nacional',country:'ES'},
+    {date:'2026-04-03',name:'Viernes Santo',type:'nacional',country:'ES'},
+    {date:'2026-05-01',name:'Fiesta del Trabajo',type:'nacional',country:'ES'},
+    {date:'2026-08-15',name:'Asunción de la Virgen',type:'nacional',country:'ES'},
+    {date:'2026-10-12',name:'Fiesta Nacional de España',type:'nacional',country:'ES'},
+    {date:'2026-11-01',name:'Todos los Santos',type:'nacional',country:'ES'},
+    {date:'2026-12-06',name:'Día de la Constitución Española',type:'nacional',country:'ES'},
+    {date:'2026-12-08',name:'Inmaculada Concepción',type:'nacional',country:'ES'},
+    {date:'2026-12-25',name:'Natividad del Señor (Navidad)',type:'nacional',country:'ES'},
+  ],
+  es_nacional_2027: [
+    {date:'2027-01-01',name:'Año Nuevo',type:'nacional',country:'ES'},
+    {date:'2027-01-06',name:'Epifanía del Señor (Reyes Magos)',type:'nacional',country:'ES'},
+    {date:'2027-03-26',name:'Viernes Santo',type:'nacional',country:'ES'},
+    {date:'2027-05-01',name:'Fiesta del Trabajo',type:'nacional',country:'ES'},
+    {date:'2027-08-15',name:'Asunción de la Virgen',type:'nacional',country:'ES'},
+    {date:'2027-10-12',name:'Fiesta Nacional de España',type:'nacional',country:'ES'},
+    {date:'2027-11-01',name:'Todos los Santos',type:'nacional',country:'ES'},
+    {date:'2027-12-06',name:'Día de la Constitución Española',type:'nacional',country:'ES'},
+    {date:'2027-12-08',name:'Inmaculada Concepción',type:'nacional',country:'ES'},
+    {date:'2027-12-25',name:'Natividad del Señor (Navidad)',type:'nacional',country:'ES'},
+  ],
+  // ── COMUNIDADES AUTÓNOMAS ──
+  madrid_2025: [{date:'2025-03-20',name:'Jueves Santo (Madrid)',type:'autonómico',country:'ES'},{date:'2025-05-02',name:'Comunidad de Madrid',type:'autonómico',country:'ES'},{date:'2025-05-15',name:'San Isidro (Madrid capital)',type:'local',country:'ES'},{date:'2025-07-25',name:'Santiago Apóstol',type:'autonómico',country:'ES'},{date:'2025-11-09',name:'La Almudena (Madrid capital)',type:'local',country:'ES'}],
+  madrid_2026: [{date:'2026-03-19',name:'San José (Madrid)',type:'autonómico',country:'ES'},{date:'2026-05-02',name:'Comunidad de Madrid',type:'autonómico',country:'ES'},{date:'2026-05-15',name:'San Isidro (Madrid capital)',type:'local',country:'ES'},{date:'2026-11-09',name:'La Almudena (Madrid capital)',type:'local',country:'ES'}],
+  madrid_2027: [{date:'2027-03-19',name:'San José (Madrid)',type:'autonómico',country:'ES'},{date:'2027-05-02',name:'Comunidad de Madrid',type:'autonómico',country:'ES'},{date:'2027-05-15',name:'San Isidro (Madrid capital)',type:'local',country:'ES'},{date:'2027-11-09',name:'La Almudena (Madrid capital)',type:'local',country:'ES'}],
+  cataluna_2025: [{date:'2025-04-21',name:'Lunes de Pascua',type:'autonómico',country:'ES'},{date:'2025-06-24',name:'Sant Joan',type:'autonómico',country:'ES'},{date:'2025-09-11',name:'Diada Nacional de Catalunya',type:'autonómico',country:'ES'},{date:'2025-12-26',name:'Sant Esteve',type:'autonómico',country:'ES'}],
+  cataluna_2026: [{date:'2026-04-06',name:'Lunes de Pascua',type:'autonómico',country:'ES'},{date:'2026-06-24',name:'Sant Joan',type:'autonómico',country:'ES'},{date:'2026-09-11',name:'Diada Nacional de Catalunya',type:'autonómico',country:'ES'},{date:'2026-12-26',name:'Sant Esteve',type:'autonómico',country:'ES'}],
+  andalucia_2025: [{date:'2025-02-28',name:'Día de Andalucía',type:'autonómico',country:'ES'},{date:'2025-04-17',name:'Jueves Santo',type:'autonómico',country:'ES'}],
+  andalucia_2026: [{date:'2026-02-28',name:'Día de Andalucía',type:'autonómico',country:'ES'},{date:'2026-04-02',name:'Jueves Santo',type:'autonómico',country:'ES'}],
+  valencia_2025: [{date:'2025-03-19',name:'San José / Falles',type:'autonómico',country:'ES'},{date:'2025-04-21',name:'Lunes de Pascua',type:'autonómico',country:'ES'},{date:'2025-10-09',name:'Día de la Comunitat Valenciana',type:'autonómico',country:'ES'}],
+  valencia_2026: [{date:'2026-03-19',name:'San José / Falles',type:'autonómico',country:'ES'},{date:'2026-04-06',name:'Lunes de Pascua',type:'autonómico',country:'ES'},{date:'2026-10-09',name:'Día de la Comunitat Valenciana',type:'autonómico',country:'ES'}],
+  pais_vasco_2025: [{date:'2025-04-21',name:'Lunes de Pascua',type:'autonómico',country:'ES'},{date:'2025-07-25',name:'Santiago Apóstol',type:'autonómico',country:'ES'},{date:'2025-10-25',name:'Día del País Vasco (Aberri Eguna)',type:'autonómico',country:'ES'}],
+  pais_vasco_2026: [{date:'2026-04-06',name:'Lunes de Pascua',type:'autonómico',country:'ES'},{date:'2026-07-25',name:'Santiago Apóstol',type:'autonómico',country:'ES'},{date:'2026-10-25',name:'Día del País Vasco',type:'autonómico',country:'ES'}],
+  galicia_2025: [{date:'2025-07-25',name:'Día de Galicia / Santiago Apóstol',type:'autonómico',country:'ES'},{date:'2025-04-21',name:'Lunes de Pascua',type:'autonómico',country:'ES'}],
+  galicia_2026: [{date:'2026-07-25',name:'Día de Galicia / Santiago Apóstol',type:'autonómico',country:'ES'},{date:'2026-04-06',name:'Lunes de Pascua',type:'autonómico',country:'ES'}],
+  aragon_2025: [{date:'2025-04-23',name:'Día de San Jorge (Aragón)',type:'autonómico',country:'ES'},{date:'2025-04-17',name:'Jueves Santo',type:'autonómico',country:'ES'}],
+  aragon_2026: [{date:'2026-04-23',name:'Día de San Jorge (Aragón)',type:'autonómico',country:'ES'},{date:'2026-04-02',name:'Jueves Santo',type:'autonómico',country:'ES'}],
+
+  // ── POLONIA NACIONAL ──
+  pl_nacional_2025: [
+    {date:'2025-01-01',name:'Nowy Rok — Año Nuevo',type:'nacional',country:'PL'},
+    {date:'2025-01-06',name:'Święto Trzech Króli — Reyes Magos',type:'nacional',country:'PL'},
+    {date:'2025-04-20',name:'Niedziela Wielkanocna — Domingo de Pascua',type:'nacional',country:'PL'},
+    {date:'2025-04-21',name:'Poniedziałek Wielkanocny — Lunes de Pascua',type:'nacional',country:'PL'},
+    {date:'2025-05-01',name:'Święto Pracy — Día del Trabajo',type:'nacional',country:'PL'},
+    {date:'2025-05-03',name:'Święto Konstytucji 3 Maja — Constitución',type:'nacional',country:'PL'},
+    {date:'2025-06-08',name:'Zesłanie Ducha Świętego — Pentecostés',type:'nacional',country:'PL'},
+    {date:'2025-06-19',name:'Boże Ciało — Corpus Christi',type:'nacional',country:'PL'},
+    {date:'2025-08-15',name:'Wniebowzięcie NMP — Asunción de la Virgen',type:'nacional',country:'PL'},
+    {date:'2025-11-01',name:'Wszystkich Świętych — Todos los Santos',type:'nacional',country:'PL'},
+    {date:'2025-11-11',name:'Święto Niepodległości — Día de la Independencia',type:'nacional',country:'PL'},
+    {date:'2025-12-25',name:'Boże Narodzenie — Navidad (1.º día)',type:'nacional',country:'PL'},
+    {date:'2025-12-26',name:'Boże Narodzenie — Navidad (2.º día)',type:'nacional',country:'PL'},
+  ],
+  pl_nacional_2026: [
+    {date:'2026-01-01',name:'Nowy Rok — Año Nuevo',type:'nacional',country:'PL'},
+    {date:'2026-01-06',name:'Święto Trzech Króli — Reyes Magos',type:'nacional',country:'PL'},
+    {date:'2026-04-05',name:'Niedziela Wielkanocna — Domingo de Pascua',type:'nacional',country:'PL'},
+    {date:'2026-04-06',name:'Poniedziałek Wielkanocny — Lunes de Pascua',type:'nacional',country:'PL'},
+    {date:'2026-05-01',name:'Święto Pracy — Día del Trabajo',type:'nacional',country:'PL'},
+    {date:'2026-05-03',name:'Święto Konstytucji 3 Maja — Constitución',type:'nacional',country:'PL'},
+    {date:'2026-05-24',name:'Zesłanie Ducha Świętego — Pentecostés',type:'nacional',country:'PL'},
+    {date:'2026-06-04',name:'Boże Ciało — Corpus Christi',type:'nacional',country:'PL'},
+    {date:'2026-08-15',name:'Wniebowzięcie NMP — Asunción de la Virgen',type:'nacional',country:'PL'},
+    {date:'2026-11-01',name:'Wszystkich Świętych — Todos los Santos',type:'nacional',country:'PL'},
+    {date:'2026-11-11',name:'Święto Niepodległości — Día de la Independencia',type:'nacional',country:'PL'},
+    {date:'2026-12-25',name:'Boże Narodzenie — Navidad (1.º día)',type:'nacional',country:'PL'},
+    {date:'2026-12-26',name:'Boże Narodzenie — Navidad (2.º día)',type:'nacional',country:'PL'},
+  ],
+  pl_nacional_2027: [
+    {date:'2027-01-01',name:'Nowy Rok — Año Nuevo',type:'nacional',country:'PL'},
+    {date:'2027-01-06',name:'Święto Trzech Króli — Reyes Magos',type:'nacional',country:'PL'},
+    {date:'2027-03-28',name:'Niedziela Wielkanocna — Domingo de Pascua',type:'nacional',country:'PL'},
+    {date:'2027-03-29',name:'Poniedziałek Wielkanocny — Lunes de Pascua',type:'nacional',country:'PL'},
+    {date:'2027-05-01',name:'Święto Pracy — Día del Trabajo',type:'nacional',country:'PL'},
+    {date:'2027-05-03',name:'Święto Konstytucji 3 Maja — Constitución',type:'nacional',country:'PL'},
+    {date:'2027-05-16',name:'Zesłanie Ducha Świętego — Pentecostés',type:'nacional',country:'PL'},
+    {date:'2027-05-27',name:'Boże Ciało — Corpus Christi',type:'nacional',country:'PL'},
+    {date:'2027-08-15',name:'Wniebowzięcie NMP — Asunción de la Virgen',type:'nacional',country:'PL'},
+    {date:'2027-11-01',name:'Wszystkich Świętych — Todos los Santos',type:'nacional',country:'PL'},
+    {date:'2027-11-11',name:'Święto Niepodległości — Día de la Independencia',type:'nacional',country:'PL'},
+    {date:'2027-12-25',name:'Boże Narodzenie — Navidad (1.º día)',type:'nacional',country:'PL'},
+    {date:'2027-12-26',name:'Boże Narodzenie — Navidad (2.º día)',type:'nacional',country:'PL'},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+//  CITY COORDS
+// ═══════════════════════════════════════════════════════
+const CITY_C = {
+  'madrid':{lat:40.42,lon:-3.70},'barcelona':{lat:41.38,lon:2.17},'sevilla':{lat:37.38,lon:-5.99},
+  'valencia':{lat:39.47,lon:-0.38},'bilbao':{lat:43.26,lon:-2.93},'zaragoza':{lat:41.65,lon:-0.89},
+  'málaga':{lat:36.72,lon:-4.42},'malaga':{lat:36.72,lon:-4.42},'granada':{lat:37.18,lon:-3.60},
+  'alicante':{lat:38.35,lon:-0.49},'murcia':{lat:37.99,lon:-1.13},'pamplona':{lat:42.82,lon:-1.65},
+  'san sebastián':{lat:43.32,lon:-1.98},'santander':{lat:43.46,lon:-3.81},'burgos':{lat:42.34,lon:-3.70},
+  'valladolid':{lat:41.65,lon:-4.72},'oviedo':{lat:43.36,lon:-5.85},'gijón':{lat:43.53,lon:-5.66},
+  'vigo':{lat:42.23,lon:-8.72},'a coruña':{lat:43.37,lon:-8.40},'palma':{lat:39.57,lon:2.65},
+  'córdoba':{lat:37.88,lon:-4.78},'toledo':{lat:39.86,lon:-4.02},'logroño':{lat:42.47,lon:-2.45},
+  'varsovia':{lat:52.23,lon:21.01},'warsaw':{lat:52.23,lon:21.01},'cracovia':{lat:50.06,lon:19.94},
+  'gdansk':{lat:54.35,lon:18.65},'wroclaw':{lat:51.11,lon:17.04},'poznan':{lat:52.41,lon:16.93},
+  'poznań':{lat:52.41,lon:16.93},'łódź':{lat:51.76,lon:19.46},  'katowice':{lat:50.26,lon:19.02},
+  // aliases
+  'sevilla':{lat:37.38,lon:-5.99},'seville':{lat:37.38,lon:-5.99},
+  'cadiz':{lat:36.53,lon:-6.30},'ronda':{lat:36.74,lon:-5.16},
+  'huelva':{lat:37.26,lon:-6.95},'almeria':{lat:36.84,lon:-2.46},
+  'toledo':{lat:39.86,lon:-4.02},'cuenca':{lat:40.07,lon:-2.13},
+  'segovia':{lat:40.95,lon:-4.12},'avila':{lat:40.65,lon:-4.70},
+  'salamanca':{lat:40.96,lon:-5.66},'zamora':{lat:41.50,lon:-5.75},
+  'leon':{lat:42.60,lon:-5.57},'soria':{lat:41.76,lon:-2.47},
+  'huesca':{lat:42.14,lon:-0.41},'teruel':{lat:40.34,lon:-1.11},
+  'lleida':{lat:41.61,lon:0.62},'tarragona':{lat:41.12,lon:1.25},
+  'girona':{lat:41.98,lon:2.82},'castellon':{lat:39.98,lon:-0.04},
+  'tenerife':{lat:28.29,lon:-16.63},'las palmas':{lat:28.12,lon:-15.44},
+  'lisboa':{lat:38.72,lon:-9.14},'lisbon':{lat:38.72,lon:-9.14},
+  'porto':{lat:41.15,lon:-8.61},'paris':{lat:48.85,lon:2.35},
+  'roma':{lat:41.90,lon:12.50},'rome':{lat:41.90,lon:12.50},
+  'berlin':{lat:52.52,lon:13.41},'amsterdam':{lat:52.37,lon:4.90},
+  'prague':{lat:50.08,lon:14.44},'praga':{lat:50.08,lon:14.44},
+  'vienna':{lat:48.21,lon:16.37},'viena':{lat:48.21,lon:16.37},
+  'brussels':{lat:50.85,lon:4.35},'bruselas':{lat:50.85,lon:4.35},
+  'milan':{lat:45.46,lon:9.19},'milán':{lat:45.46,lon:9.19},
+  'munich':{lat:48.14,lon:11.58},'múnich':{lat:48.14,lon:11.58},
+  'nice':{lat:43.71,lon:7.26},'niza':{lat:43.71,lon:7.26},
+  'krakow':{lat:50.06,lon:19.94},'krakow':{lat:50.06,lon:19.94},
+  'szczecin':{lat:53.43,lon:14.55},'bydgoszcz':{lat:53.12,lon:18.01},
+  'lublin':{lat:51.25,lon:22.57},'bialystok':{lat:53.13,lon:23.16},
+  'rzeszow':{lat:50.04,lon:22.00},'kielce':{lat:50.87,lon:20.63},
+  'olsztyn':{lat:53.77,lon:20.48},'torun':{lat:53.01,lon:18.60},
+};
+
+const CITIES_LIST = [
+  // España
+  'Madrid','Barcelona','Sevilla','Valencia','Bilbao','Zaragoza','Málaga','Granada',
+  'Alicante','Murcia','Pamplona','San Sebastián','Santander','Burgos','Valladolid',
+  'Oviedo','Gijón','Vigo','A Coruña','Palma','Córdoba','Toledo','Logroño',
+  'Cádiz','Huelva','Almería','Jaén','Salamanca','Ávila','Segovia','Cuenca',
+  'León','Zamora','Soria','Huesca','Teruel','Lleida','Tarragona','Girona',
+  'Castellón','Las Palmas','Tenerife','Santa Cruz de Tenerife',
+  // Portugal
+  'Lisboa','Oporto','Faro','Braga','Coimbra',
+  // Polonia
+  'Varsovia','Cracovia','Gdansk','Wroclaw','Poznań','Łódź','Katowice',
+  'Szczecin','Bydgoszcz','Lublin','Białystok','Rzeszów','Toruń','Olsztyn',
+  // Europa
+  'París','Roma','Berlín','Ámsterdam','Praga','Viena','Bruselas',
+  'Milán','Múnich','Niza','Lyon','Zurich','Budapest','Varsovia',
+];
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let S = {
+  yr: new Date().getFullYear(), mo: new Date().getMonth(),
+  origin: 'Madrid', oC: {lat:40.42,lon:-3.70},
+  totalD: 22, enjoyD: 0, alertEmail: '', shId: '', shConn: false,
+  vacs: [], hols: [], selDay: null,
+  fTypes: [], fTp: ['car','bus','train','plane'], fDist: 3000, fTime: 0, fBudget: 0,
+  shUrl: '',
+  ejsServiceId: '', ejsTemplateId: '', ejsPublicKey: '',
+  ghToken: '', ghGistId: '', ghConnected: false,
+  _lastSaved: '',  // GitHub Gist sync state
+  holCountry: 'es',
+  visited: [],       // list of dest ids marked as visited
+  fVisited: 'hide',  // 'hide' | 'show' | 'only'
+};
+
+function init() {
+  // Detect device type and apply adaptive layout
+  detectDevice();
+  loadS(); updStats(); renderCal(); loadHols();
+  applyF(); genWkOpps();
+  // Auto-sync with GitHub if configured
+  if(S.ghConnected) ghAutoLoad();
+  // Schedule alert checks — run once on load and daily thereafter
+  setTimeout(checkAlerts, 5000);
+  setInterval(checkAlerts, 24*60*60*1000);
+  document.querySelectorAll('.mover').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+  // Mobile: add touch feedback class on tap
+  document.querySelectorAll('.btn,.tab,.chip,.cnb,.mob-tab,.hct').forEach(el => {
+    el.addEventListener('touchstart', () => el.classList.add('tap'), {passive:true});
+    el.addEventListener('touchend',   () => setTimeout(()=>el.classList.remove('tap'), 150), {passive:true});
+  });
+  // Prevent double-tap zoom on buttons
+  document.querySelectorAll('.btn,.tab,.chip,.cnb,.mob-tab').forEach(el => {
+    el.addEventListener('touchend', e => e.preventDefault(), {passive:false});
+  });
+  // Device-specific hints handled by detectDevice()
+  // Show mobile tip only once
+  if(!sessionStorage.getItem('wl_tip_shown') && window.innerWidth <= 860) {
+    sessionStorage.setItem('wl_tip_shown','1');
+    setTimeout(()=>toast('💡 Usa el menú inferior para navegar','inf'), 1400);
+  }
+}
+
+function loadS() {
+  try {
+    const d = JSON.parse(localStorage.getItem('wl_v4') || '{}');
+    Object.assign(S, d);
+    document.getElementById('inpTot').value = S.totalD;
+    document.getElementById('inpEnj').value = S.enjoyD;
+    document.getElementById('oInp').value = S.origin;
+    if(S.alertEmail) { document.getElementById('aEmail').value = S.alertEmail; document.getElementById('aEmailMain').value = S.alertEmail; }
+    if(S.shId) document.getElementById('shId').value = S.shId;
+    if(S.shUrl) { const el=document.getElementById('shUrl'); if(el) el.value=S.shUrl; }
+    if(S.shConn) { const el=document.getElementById('shSts'); if(el){el.className='sts ok';el.innerHTML='<span class="sdot"></span> Sincronizado';} }
+    // Restore EmailJS fields
+    if(S.ejsServiceId)  { const el=document.getElementById('ejsServiceId');  if(el) el.value=S.ejsServiceId; }
+    if(S.ejsTemplateId) { const el=document.getElementById('ejsTemplateId'); if(el) el.value=S.ejsTemplateId; }
+    if(S.ejsPublicKey)  { const el=document.getElementById('ejsPublicKey');  if(el) el.value=S.ejsPublicKey; }
+    if(S.ejsPublicKey)  initEmailJS();
+    if(S.ghToken) { const el=document.getElementById('ghToken'); if(el) el.value=S.ghToken; }
+    if(S.ghGistId) {
+      const row = document.getElementById('ghGistIdRow'); if(row) row.style.display='';
+      const el = document.getElementById('ghGistId'); if(el) el.value=S.ghGistId;
+    }
+    if(S.shConn) { const st=document.getElementById('shSts'); if(st){st.className='sts ok';st.innerHTML='<span class="sdot"></span> Conectado';} }
+    if(S.ghConnected) ghUpdStatus(true, S._lastSaved ? '✓ Sync activo · '+fmtD(S._lastSaved) : '✓ Sync activo');
+    // Restore filter chips state from saved state
+    setTimeout(restoreFilterUI, 0);
+  } catch(e) {}
+}
+function restoreFilterUI() {
+  // Restore type chips
+  if(S.fTypes && S.fTypes.length) {
+    S.fTypes.forEach(t => {
+      const chip = document.querySelector(`#typeChips .chip[data-t="${t}"]`);
+      if(chip) { chip.classList.add('on', t); }
+    });
+  }
+  // Restore transport chips
+  if(S.fTp) {
+    document.querySelectorAll('#tpChips .chip').forEach(chip => {
+      const tp = chip.dataset.tp;
+      chip.classList.toggle('on', S.fTp.includes(tp));
+    });
+  }
+  // Restore range
+  if(S.fDist < 3000) {
+    const rng = document.getElementById('rDist');
+    if(rng) rng.value = S.fDist;
+    const lbl = document.getElementById('rDistLbl');
+    if(lbl) lbl.textContent = S.fDist + ' km';
+  }
+  // Restore selects
+  const selMap = {rTime: S.fTime||0, rBudg: S.fBudget||0, rVisited: S.fVisited||'hide'};
+  Object.entries(selMap).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if(el) el.value = String(val);
+  });
+  updFM();
+}
+
+let _suppressGhPush = false;   // set true during pull to avoid push loop
+function saveS(suppressPush=false) {
+  localStorage.setItem('wl_v4', JSON.stringify(S));
+  if(S.ghConnected && S.ghToken && S.ghGistId && !suppressPush && !_suppressGhPush) {
+    clearTimeout(window._ghPushTimer);
+    window._ghPushTimer = setTimeout(() => ghPush(true), 3000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ORIGIN
+// ═══════════════════════════════════════════════════════
+function onOInp() {
+  const v = document.getElementById('oInp').value.trim();
+  const box = document.getElementById('oSug');
+  if(v.length < 2) { box.classList.remove('open'); return; }
+  const m = CITIES_LIST.filter(c => c.toLowerCase().includes(v.toLowerCase())).slice(0, 7);
+  if(!m.length) { box.classList.remove('open'); return; }
+  box.innerHTML = m.map(c => `<div class="o-sug-item" onmousedown="selOrigin('${c}')">${c}</div>`).join('');
+  box.classList.add('open');
+}
+function hideSugD() { setTimeout(() => document.getElementById('oSug').classList.remove('open'), 180); }
+function applyOriginInput() {
+  hideSugD();
+  const v = document.getElementById('oInp').value.trim();
+  if(v && v !== S.origin) setOrigin(v);
+}
+function selOrigin(c) { document.getElementById('oInp').value = c; document.getElementById('oSug').classList.remove('open'); setOrigin(c); }
+function setOrigin(n) {
+  if(!n || !n.trim()) return;
+  S.origin = n.trim();
+  const k = S.origin.toLowerCase();
+  S.oC = CITY_C[k] || guessCoords(k) || {lat:40.42,lon:-3.70};
+  saveS(); applyF(); genWkOpps(); renderCal();
+  toast('📍 Origen: ' + S.origin, 'inf');
+}
+function guessCoords(k) {
+  // Normalize: remove accents for fuzzy match
+  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const nk = norm(k);
+  // Exact match first
+  for(const [key,v] of Object.entries(CITY_C)) { if(norm(key)===nk) return v; }
+  // Starts-with match
+  for(const [key,v] of Object.entries(CITY_C)) { if(norm(key).startsWith(nk)||nk.startsWith(norm(key))) return v; }
+  // Substring match
+  for(const [key,v] of Object.entries(CITY_C)) { if(norm(key).includes(nk)||nk.includes(norm(key))) return v; }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+//  DISTANCE
+// ═══════════════════════════════════════════════════════
+function hav(a,b,c,d) {
+  const R=6371, dL=(c-a)*Math.PI/180, dO=(d-b)*Math.PI/180;
+  const x = Math.sin(dL/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+}
+function dist(d) { return hav(S.oC.lat, S.oC.lon, d.coords.lat, d.coords.lon); }
+function estT(km, tp) {
+  if(tp.includes('plane') && km > 300) return Math.round(km/750*60)+75;
+  if(tp.includes('train')) return Math.round(km/170*60);
+  if(tp.includes('car'))   return Math.round(km/105*60);
+  return Math.round(km/82*60);
+}
+function fmtT(m) { if(m<60) return m+'m'; const h=Math.floor(m/60),r=m%60; return h+'h'+(r?` ${r}m`:''); }
+function budgL(b) { if(b<=140)return'💚 Económico'; if(b<=280)return'💛 Moderado'; if(b<=430)return'🟠 Cómodo'; return'🔴 Premium'; }
+
+// ═══════════════════════════════════════════════════════
+//  FILTERS — fully operational
+// ═══════════════════════════════════════════════════════
+const TP_L   = {car:'🚗 Coche', bus:'🚌 Bus', train:'🚆 Tren', plane:'✈️ Avión'};
+const TP_C   = {car:'tp-car',   bus:'tp-bus',  train:'tp-trn',  plane:'tp-fly'};
+const TYPE_L = {nat:'🌿 Naturaleza', ciu:'🏙️ Ciudad', cul:'🏛️ Cultura',
+                pla:'🏖️ Playa', gas:'🍷 Gastro', ski:'⛷️ Ski', rur:'🌾 Rural'};
+
+// Max distances in km that make sense for each duration bracket
+const DUR_DIST = { we: 400, br: 700, wk: 1500, long: 9999 };
+
+function togType(el) {
+  const t = el.dataset.t;
+  const isOn = el.classList.toggle('on');
+  // Clear all type-specific colour classes then re-apply if active
+  el.classList.remove('nat','ciu','cul','pla','gas','ski','rur');
+  if(isOn) el.classList.add(t);
+  const i = S.fTypes.indexOf(t);
+  if(i >= 0) S.fTypes.splice(i, 1); else S.fTypes.push(t);
+  updFM(); applyF();
+}
+
+function togTp(el) {
+  const t = el.dataset.tp;
+  el.classList.toggle('on');
+  const i = S.fTp.indexOf(t);
+  if(i >= 0) S.fTp.splice(i, 1); else S.fTp.push(t);
+  // Guard: at least one transport must remain active
+  if(S.fTp.length === 0) {
+    S.fTp.push(t);
+    el.classList.add('on');
+    toast('Debe haber al menos un medio de transporte activo','warn');
+    return;
+  }
+  updFM(); applyF();
+}
+
+function onRng() {
+  const v = parseInt(document.getElementById('rDist').value);
+  document.getElementById('rDistLbl').textContent = v >= 3000 ? 'Sin límite' : v + ' km';
+  S.fDist = v;
+  updFM(); applyF();
+}
+
+function isFiltered() {
+  const dur = document.getElementById('rDur')?.value || '0';
+  const country = document.getElementById('rCountry')?.value || '0';
+  const visited = document.getElementById('rVisited')?.value || 'hide';
+  return S.fTypes.length > 0 || S.fTp.length < 4 || S.fDist < 3000 ||
+         S.fTime > 0 || S.fBudget > 0 || dur !== '0' || country !== '0' ||
+         visited !== 'hide';
+}
+
+function updFM() {
+  const el = document.getElementById('fmBadge');
+  if(el) el.style.display = isFiltered() ? 'none' : 'inline-flex';
+  renderActivePills();
+}
+
+function renderActivePills() {
+  const box = document.getElementById('activePills');
+  if(!box) return;
+  const pills = [];
+  if(S.fTypes.length) {
+    S.fTypes.forEach(t => pills.push({label: TYPE_L[t], key:'type', val:t}));
+  }
+  if(S.fTp.length < 4) {
+    const missing = ['car','bus','train','plane'].filter(t => !S.fTp.includes(t));
+    missing.forEach(t => pills.push({label:'Sin '+TP_L[t].split(' ')[1], key:'tp', val:t}));
+  }
+  if(S.fDist < 3000) pills.push({label:'≤'+S.fDist+'km', key:'dist'});
+  if(S.fTime > 0) {
+    const tLabels = {'60':'≤1h','120':'≤2h','180':'≤3h','300':'≤5h','480':'≤8h'};
+    pills.push({label: tLabels[S.fTime]||S.fTime+'min', key:'time'});
+  }
+  if(S.fBudget > 0) pills.push({label:'≤'+S.fBudget+'€', key:'budget'});
+  const dur = document.getElementById('rDur')?.value;
+  if(dur && dur !== '0') {
+    const dl = {we:'Fin de semana', br:'Puente', wk:'Semana', long:'8+ días'};
+    pills.push({label: dl[dur]||dur, key:'dur'});
+  }
+  const country = document.getElementById('rCountry')?.value;
+  if(country && country !== '0') pills.push({label: country, key:'country'});
+  const visited = document.getElementById('rVisited')?.value;
+  if(visited === 'only') pills.push({label:'Solo visitados', key:'visited'});
+  if(visited === 'show') pills.push({label:'Incl. visitados', key:'visited'});
+
+  box.style.display = pills.length ? 'flex' : 'none';
+  box.innerHTML = pills.map(p =>
+    `<span class="f-pill" onclick="removePill('${p.key}','${p.val||''}')" title="Quitar filtro">
+       ${p.label} <span class="remove">✕</span>
+     </span>`
+  ).join('');
+}
+
+function removePill(key, val) {
+  if(key==='type') {
+    S.fTypes = S.fTypes.filter(t=>t!==val);
+    const chip = document.querySelector(`#typeChips .chip[data-t="${val}"]`);
+    if(chip) { chip.classList.remove('on', val); }
+  }
+  if(key==='tp') {
+    if(!S.fTp.includes(val)) {
+      S.fTp.push(val);
+      const chip = document.querySelector(`#tpChips .chip[data-tp="${val}"]`);
+      if(chip) chip.classList.add('on');
+    }
+  }
+  if(key==='dist') { S.fDist=3000; const el=document.getElementById('rDist'); if(el){el.value=3000;} document.getElementById('rDistLbl').textContent='Sin límite'; }
+  if(key==='time') { S.fTime=0; const el=document.getElementById('rTime'); if(el) el.value=0; }
+  if(key==='budget') { S.fBudget=0; const el=document.getElementById('rBudg'); if(el) el.value=0; }
+  if(key==='dur') { const el=document.getElementById('rDur'); if(el) el.value=0; }
+  if(key==='country') { const el=document.getElementById('rCountry'); if(el) el.value=0; }
+  if(key==='visited') { const el=document.getElementById('rVisited'); if(el) el.value='hide'; S.fVisited='hide'; }
+  updFM(); applyF();
+}
+
+function applyF() {
+  // Read all filter values
+  S.fTime   = parseInt(document.getElementById('rTime')?.value   || 0);
+  S.fBudget = parseInt(document.getElementById('rBudg')?.value   || 0);
+  const dur      = document.getElementById('rDur')?.value     || '0';
+  const country  = document.getElementById('rCountry')?.value  || '0';
+  S.fVisited     = document.getElementById('rVisited')?.value  || 'hide';
+
+  // Compute distances for all destinations
+  let res = DESTS.map(d => {
+    const cd = dist(d);
+    const ct = estT(cd, d.transport);
+    return {...d, cd, ct};
+  });
+
+  // ── Filter: type (OR logic — matches any selected type) ──
+  if(S.fTypes.length) {
+    res = res.filter(d => d.types.some(t => S.fTypes.includes(t)));
+  }
+
+  // ── Filter: transport (must support at least one active transport) ──
+  if(S.fTp.length < 4) {
+    res = res.filter(d => d.transport.some(t => S.fTp.includes(t)));
+  }
+
+  // ── Filter: distance ──
+  if(S.fDist < 3000) {
+    res = res.filter(d => d.cd <= S.fDist);
+  }
+
+  // ── Filter: travel time ──
+  if(S.fTime > 0) {
+    res = res.filter(d => d.ct <= S.fTime);
+  }
+
+  // ── Filter: budget ──
+  if(S.fBudget > 0) {
+    res = res.filter(d => d.budget <= S.fBudget);
+  }
+
+  // ── Filter: duration bracket → maps to max distance logic ──
+  if(dur !== '0') {
+    const maxD = DUR_DIST[dur] || 9999;
+    res = res.filter(d => d.cd <= maxD);
+  }
+
+  // ── Filter: country / zone ──
+  if(country !== '0') {
+    res = res.filter(d => d.country === country);
+  }
+
+  // ── Filter: visited ──
+  const visitedSet = new Set(S.visited || []);
+  if(S.fVisited === 'hide') {
+    res = res.filter(d => !visitedSet.has(d.id));
+  } else if(S.fVisited === 'only') {
+    res = res.filter(d => visitedSet.has(d.id));
+  }
+  // 'show' → no filter, all pass
+
+  // Sort by distance
+  res.sort((a,b) => a.cd - b.cd);
+
+  // Update UI
+  const total = DESTS.length;
+  const shown = res.length;
+  const hiddenVisited = visitedSet.size > 0 && S.fVisited === 'hide' ? visitedSet.size : 0;
+  document.getElementById('rCount').textContent =
+    shown ? `${shown} destino${shown!==1?'s':''} encontrado${shown!==1?'s':''}` : '';
+  const vc = document.getElementById('visitedCount');
+  if(vc) vc.textContent = visitedSet.size > 0 ?
+    `${visitedSet.size} visitado${visitedSet.size!==1?'s':''}` : '';
+
+  const filtered = isFiltered();
+  document.getElementById('tripsTitle').textContent = filtered
+    ? `Destinos filtrados desde ${S.origin}`
+    : `Todos los destinos desde ${S.origin}`;
+
+  updFM();
+  renderCards(res);
+}
+
+function resetF() {
+  S.fTypes=[]; S.fTp=['car','bus','train','plane']; S.fDist=3000; S.fTime=0; S.fBudget=0; S.fVisited='hide';
+  const ids = ['rDist','rTime','rBudg','rDur','rCountry','rVisited'];
+  const vals = [3000, 0, 0, 0, 0, 'hide'];
+  ids.forEach((id,i) => { const el=document.getElementById(id); if(el) el.value=vals[i]; });
+  document.getElementById('rDistLbl').textContent = 'Sin límite';
+  // Reset type chips
+  document.querySelectorAll('#typeChips .chip').forEach(chip => {
+    chip.classList.remove('on','nat','ciu','cul','pla','gas','ski','rur');
+  });
+  // Reset transport chips — all on
+  document.querySelectorAll('#tpChips .chip').forEach(chip => chip.classList.add('on'));
+  document.getElementById('fmBadge').style.display = 'inline-flex';
+  const pills = document.getElementById('activePills');
+  if(pills) pills.style.display = 'none';
+  applyF();
+  toast('↺ Filtros restablecidos','inf');
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER CARDS
+// ═══════════════════════════════════════════════════════
+function renderCards(dests) {
+  const g = document.getElementById('tripsGrid');
+  if(!dests.length) {
+    const visitedSet = new Set(S.visited||[]);
+    const isVisitedOnly = S.fVisited === 'only';
+    g.innerHTML=`<div class="noret">
+      <div style="font-size:2.4rem;margin-bottom:11px">🗺️</div>
+      <div style="font-weight:600;margin-bottom:5px">Sin resultados</div>
+      <div style="font-size:.79rem">
+        ${isVisitedOnly && visitedSet.size===0 
+          ? 'Aún no has marcado ningún destino como visitado.'
+          : 'Prueba a ampliar los filtros o cambiar el origen.'}
+      </div>
+      <button class="btn btn-g btn-s" style="margin-top:11px" onclick="resetF()">↺ Limpiar filtros</button>
+    </div>`;
+    return;
+  }
+  const visitedSet = new Set(S.visited||[]);
+  g.innerHTML = dests.map(d => {
+    const isVisited = visitedSet.has(d.id);
+    const tb = d.types.slice(0,2).map(t => `<span class="tb tb-${t}">${TYPE_L[t]||t}</span>`).join('');
+    const tp = d.transport.map(t => `<span class="tpil ${TP_C[t]}">${TP_L[t]}</span>`).join('');
+    const hl = d.highlights.map(h => `<span class="hl">${h}</span>`).join('');
+    const bk = buildBk(d);
+    const visitBtn = isVisited
+      ? `<button class="btn-visit unmark" onclick="toggleVisited('${d.id}')">✓ Ya visitado</button>`
+      : `<button class="btn-visit mark"   onclick="toggleVisited('${d.id}')">＋ Marcar visitado</button>`;
+    const visitedBadge = isVisited
+      ? `<span class="visited-badge">✈️ Ya visitado</span>`
+      : '';
+    return `<div class="card${isVisited?' visited-dest':''}" id="card-${d.id}">
+      <div class="c-hero">
+        <span class="c-emo">${d.emoji}</span>
+        <div class="c-dest">${d.name} ${visitedBadge}</div>
+        <div class="c-reg">${d.country} · ${d.region}</div>
+        <div class="c-tags">${tb}</div>
+      </div>
+      <div class="c-body">
+        <div class="c-meta">
+          <div><div class="c-ml">Distancia</div><div class="c-mv">${d.cd} km</div></div>
+          <div><div class="c-ml">Tiempo</div><div class="c-mv">${fmtT(d.ct)}</div></div>
+          <div><div class="c-ml">Presupuesto</div><div class="c-mv" style="font-size:.68rem">${budgL(d.budget)}<br><span style="font-family:'DM Mono',monospace;color:var(--txt2);font-size:.66rem">~${d.budget}€/pers</span></div></div>
+        </div>
+        <div class="c-desc">${d.desc}</div>
+        <div class="c-hl">${hl}</div>
+        <div class="c-tp">${tp}</div>
+      </div>
+      <div class="c-foot">${bk}${visitBtn}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildBk(d) {
+  const b = d.booking||{}; let l='';
+  if(b.hotel)  l+=`<a class="bl bl-hot" href="${b.hotel}"  target="_blank" rel="noopener">🏨 Hotel</a>`;
+  if(b.flight) l+=`<a class="bl bl-fly" href="${b.flight}" target="_blank" rel="noopener">✈️ Vuelo</a>`;
+  if(b.train)  l+=`<a class="bl bl-trn" href="${b.train}"  target="_blank" rel="noopener">🚆 Tren</a>`;
+  if(b.bus)    l+=`<a class="bl bl-bus" href="${b.bus}"    target="_blank" rel="noopener">🚌 Bus</a>`;
+  if(b.map)    l+=`<a class="bl bl-map" href="${b.map}"    target="_blank" rel="noopener">🗺️ Mapa</a>`;
+  return l;
+}
+
+// ═══════════════════════════════════════════════════════
+//  VISITED DESTINATIONS
+// ═══════════════════════════════════════════════════════
+function toggleVisited(id) {
+  if(!S.visited) S.visited = [];
+  const i = S.visited.indexOf(id);
+  if(i >= 0) {
+    S.visited.splice(i, 1);
+    toast(`✓ ${getDestName(id)} quitado de visitados`,'inf');
+  } else {
+    S.visited.push(id);
+    toast(`✈️ ${getDestName(id)} marcado como visitado`,'ok');
+  }
+  saveS();
+  // Refresh just this card without re-rendering everything
+  applyF();
+}
+
+function getDestName(id) {
+  const d = DESTS.find(d => d.id === id);
+  return d ? d.name : id;
+}
+
+function clearAllVisited() {
+  if(!S.visited || !S.visited.length) { toast('No hay destinos visitados','inf'); return; }
+  const n = S.visited.length;
+  S.visited = [];
+  saveS(); applyF(); renderVisitedModal();
+  toast(`✓ ${n} destino${n!==1?'s':''} quitado${n!==1?'s':''} de visitados`,'inf');
+}
+
+function renderVisitedModal() {
+  const list = document.getElementById('visitedModalList');
+  if(!list) return;
+  const search = (document.getElementById('visitedSearch')?.value||'').toLowerCase();
+  const visitedSet = new Set(S.visited||[]);
+  let dests = [...DESTS];
+  if(search) dests = dests.filter(d => d.name.toLowerCase().includes(search) || d.country.toLowerCase().includes(search));
+  // Sort: visited first, then alphabetical
+  dests.sort((a,b) => {
+    const av = visitedSet.has(a.id) ? 0 : 1;
+    const bv = visitedSet.has(b.id) ? 0 : 1;
+    if(av !== bv) return av - bv;
+    return a.name.localeCompare(b.name, 'es');
+  });
+  list.innerHTML = dests.map(d => {
+    const isV = visitedSet.has(d.id);
+    return `<div class="vlist-item">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:1.1rem">${d.emoji}</span>
+        <div>
+          <div style="font-weight:500">${d.name}</div>
+          <div style="font-size:.68rem;color:var(--txt2)">${d.country} · ${d.region}</div>
+        </div>
+        ${isV ? '<span class="visited-badge" style="margin-left:4px">✈️ Visitado</span>' : ''}
+      </div>
+      <button class="btn-visit ${isV?'unmark':'mark'}" onclick="toggleVisited('${d.id}');renderVisitedModal()">
+        ${isV ? '✕ Quitar' : '＋ Marcar'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// Visited modal is rendered in openM()
+
+// ═══════════════════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════════════════
+const MNAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function pad(n) { return String(n).padStart(2,'0'); }
+function d2s(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+function chMo(dir) {
+  S.mo += dir; if(S.mo>11){S.mo=0;S.yr++;} if(S.mo<0){S.mo=11;S.yr--;}
+  renderCal(); genWkOpps();
+}
+
+function updCalBadge() {
+  const el = document.getElementById('calFilterBadge');
+  if(!el) return;
+  const cLabel = calFilter.country==='ES' ? '\u{1F1EA}\u{1F1F8} Solo Espa\u00F1a' : calFilter.country==='PL' ? '\u{1F1F5}\u{1F1F1} Solo Polonia' : '\u{1F1EA}\u{1F1F8}\u{1F1F5}\u{1F1F1} Espa\u00F1a + Polonia';
+  const tLabel = calFilter.type==='all' ? '' : ' \u00B7 solo ' + calFilter.type;
+  el.textContent = (calFilter.country==='all' && calFilter.type==='all')
+    ? '' : 'Mostrando: ' + cLabel + tLabel;
+}
+
+function renderCal() {
+  updCalBadge();
+  document.getElementById('calTit').textContent = `${MNAMES[S.mo]} ${S.yr}`;
+  const c = document.getElementById('calDays'); c.innerHTML = '';
+  const fd = new Date(S.yr, S.mo, 1); let sd = fd.getDay(); sd = sd===0?6:sd-1;
+  const dim = new Date(S.yr, S.mo+1, 0).getDate(), pd = new Date(S.yr, S.mo, 0).getDate();
+  const ts = d2s(new Date());
+
+  for(let i=sd-1;i>=0;i--) { const x=mk(''); x.classList.add('oth'); x.innerHTML=`<span class="dn">${pd-i}</span>`; c.appendChild(x); }
+
+  // Highlight only the holidays that survive the active filter
+  const activeHols = visibleHols();
+
+  for(let d=1; d<=dim; d++) {
+    const ds = `${S.yr}-${pad(S.mo+1)}-${pad(d)}`;
+    const dow = new Date(S.yr,S.mo,d).getDay();
+    const iw = dow===0||dow===6, it = ds===ts;
+    const hES = activeHols.some(h=>h.date===ds && h.country==='ES');
+    const hPL = activeHols.some(h=>h.date===ds && h.country==='PL');
+    const hBOTH = hES && hPL;
+    const iv = S.vacs.some(v=>ds>=v.start&&ds<=v.end);
+    const cl = ['day'];
+    if(iw) cl.push('wkn'); if(it) cl.push('tod');
+    if(iv) cl.push('vac');
+    else if(hBOTH) cl.push('hol');
+    else if(hES)   cl.push('hol');
+    else if(hPL)   cl.push('hol','pl');
+    const x = document.createElement('div'); x.className = cl.join(' ');
+    let dots = '';
+    if(hES) dots += `<div class="ddot" style="background:var(--acc4)"></div>`;
+    if(hPL) dots += `<div class="ddot" style="background:var(--acc5)"></div>`;
+    if(iv)  dots += `<div class="ddot" style="background:var(--acc3)"></div>`;
+    x.innerHTML = `<span class="dn">${d}</span>${dots?`<div class="ddots">${dots}</div>`:''}`;
+    // Modal always shows the full unfiltered info for the clicked day
+    const hES_full = S.hols.some(h=>h.date===ds && h.country==='ES');
+    const hPL_full = S.hols.some(h=>h.date===ds && h.country==='PL');
+    x.onclick = () => openDayM(ds, hES_full, hPL_full, iv, iw);
+    c.appendChild(x);
+  }
+  const tot = sd+dim, rem = tot%7===0?0:7-tot%7;
+  for(let i=1;i<=rem;i++) { const x=mk(''); x.classList.add('oth'); x.innerHTML=`<span class="dn">${i}</span>`; c.appendChild(x); }
+}
+function mk(cls) { const x=document.createElement('div'); x.className='day'+(cls?' '+cls:''); return x; }
+
+// ═══════════════════════════════════════════════════════
+//  WEEKEND OPPORTUNITIES
+// ═══════════════════════════════════════════════════════
+function genWkOpps() {
+  const con = document.getElementById('wkOpps'); if(!con) return;
+  const dim = new Date(S.yr, S.mo+1, 0).getDate(); const wks = [];
+  for(let d=1; d<=dim; d++) {
+    const dow = new Date(S.yr, S.mo, d).getDay();
+    if(dow===6) {
+      const fri = d2s(new Date(S.yr,S.mo,d-1)), mon = d2s(new Date(S.yr,S.mo,d+2));
+      const fH = S.hols.some(h=>h.date===fri), mH = S.hols.some(h=>h.date===mon);
+      let lbl = `Sáb ${d} — Dom ${d+1}`; let ex = '';
+      if(fH) { lbl=`Vie ${d-1}★ — Dom ${d+1}`; ex='🎉 Puente'; }
+      if(mH) { lbl=`Sáb ${d} — Lun ${d+2}★`; ex='🎉 Puente'; }
+      wks.push({lbl,ex,d});
+    }
+  }
+  if(!wks.length) { con.innerHTML=`<div style="color:var(--txt2);font-size:.81rem;padding:8px 0">Sin fines de semana este mes.</div>`; return; }
+  const nb = DESTS.map(d=>({...d,cd:dist(d)})).sort((a,b)=>a.cd-b.cd).slice(0,8);
+  con.innerHTML = wks.map((w,i) => {
+    const t = nb[i%nb.length];
+    const tl = t ? t.transport.slice(0,2).map(tp => {
+      const href = tp==='train'?(t.booking.train||'https://www.renfe.com/'): tp==='bus'?(t.booking.bus||'https://www.alsa.com/'): tp==='plane'?(t.booking.flight||'https://www.skyscanner.es/'):(t.booking.map||'#');
+      return `<a class="op-link" href="${href}" target="_blank" rel="noopener" style="background:rgba(122,184,232,.06);border-color:rgba(122,184,232,.2);color:var(--acc2)">${TP_L[tp]}</a>`;
+    }).join('') : '';
+    const hl = t&&t.booking.hotel ? `<a class="op-link" href="${t.booking.hotel}" target="_blank" rel="noopener" style="background:rgba(122,232,184,.06);border-color:rgba(122,232,184,.2);color:var(--acc3)">🏨 Hotel</a>` : '';
+    return `<div class="op-item">
+      <div style="min-width:0">
+        <div class="op-dt">${w.lbl} ${w.ex}</div>
+        <div class="op-nm">${t?t.emoji+' '+t.name:'—'}</div>
+        <div class="op-info">${t?t.cd+'km · '+fmtT(estT(t.cd,t.transport)):''}</div>
+      </div>
+      <div class="op-links">${tl}${hl}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  DAY MODAL
+// ═══════════════════════════════════════════════════════
+function openDayM(ds, hES, hPL, iv, iw) {
+  S.selDay = ds;
+  const dt = new Date(ds+'T00:00:00');
+  const fmt = dt.toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('mDayTit').textContent = fmt.charAt(0).toUpperCase()+fmt.slice(1);
+  let html = '';
+  if(hES) { const h=S.hols.find(h=>h.date===ds&&h.country==='ES');
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(232,122,154,.07);border:1px solid rgba(232,122,154,.2);border-radius:8px">🇪🇸 <div><div style="font-weight:600;color:var(--acc4)">${h.name}</div><div style="font-size:.7rem;color:var(--txt2)">${h.type} · España</div></div></div>`; }
+  if(hPL) { const h=S.hols.find(h=>h.date===ds&&h.country==='PL');
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(196,122,232,.07);border:1px solid rgba(196,122,232,.2);border-radius:8px">🇵🇱 <div><div style="font-weight:600;color:var(--acc5)">${h.name}</div><div style="font-size:.7rem;color:var(--txt2)">${h.type} · Polonia</div></div></div>`; }
+  if(iv) { const v=S.vacs.find(v=>ds>=v.start&&ds<=v.end);
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:rgba(122,232,184,.07);border:1px solid rgba(122,232,184,.2);border-radius:8px">🏖️ <div><div style="font-weight:600;color:var(--acc3)">${v.desc||'Vacación'}</div>${v.dest?`<div style="font-size:.7rem;color:var(--txt2)">📍 ${v.dest}</div>`:''}</div></div>`; }
+  if(iw && !iv) {
+    const nb = DESTS.map(d=>({...d,cd:dist(d)})).sort((a,b)=>a.cd-b.cd).slice(0,3);
+    html += `<div style="font-size:.77rem;color:var(--acc2);margin-bottom:6px">💡 Escapadas desde ${S.origin}:</div>`;
+    html += nb.map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;margin-bottom:4px;font-size:.77rem">
+      <span>${d.emoji} <strong>${d.name}</strong> · ${d.cd}km</span>
+      ${d.booking.hotel?`<a href="${d.booking.hotel}" target="_blank" style="color:var(--acc3);font-size:.69rem;text-decoration:none;white-space:nowrap">🏨 Reservar</a>`:''}</div>`).join('');
+  }
+  if(!html) html = `<div style="font-size:.81rem;color:var(--txt2)">Día normal. Puedes marcarlo como vacación.</div>`;
+  document.getElementById('mDayBody').innerHTML = html;
+  openM('mDay');
+}
+function addVacFromDay() {
+  closeM('mDay');
+  document.getElementById('vS').value = S.selDay||'';
+  document.getElementById('vE').value = S.selDay||'';
+  openM('mVac');
+  previewWorkDays();
+}
+
+function previewWorkDays() {
+  const s = document.getElementById('vS').value;
+  const e = document.getElementById('vE').value;
+  const preview = document.getElementById('wdayPreview');
+  if(!s || !e || s > e) { if(preview) preview.style.display='none'; return; }
+  const wd = workingDays(s, e);
+  const cal = Math.round((new Date(e)-new Date(s))/86400000)+1;
+  const skip = cal - wd;
+  document.getElementById('wdayHabil').textContent = `✓ ${wd} día${wd!==1?'s':''} hábil${wd!==1?'es':''}`;
+  document.getElementById('wdayCalendar').textContent = 
+    skip > 0 ? `(${cal} días totales · ${skip} fin${skip>1?'es':''}  de semana/festivo${skip>1?'s':''} excluidos)` : `(${cal} días, todos hábiles)`;
+  if(preview) preview.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════
+//  VACATIONS
+// ═══════════════════════════════════════════════════════
+// Count working days between two date strings (excludes weekends + loaded holidays)
+function workingDays(startStr, endStr) {
+  const holSet = new Set(S.hols.map(h=>h.date));
+  let count = 0;
+  const cur = new Date(startStr + 'T00:00:00');
+  const end = new Date(endStr   + 'T00:00:00');
+  while(cur <= end) {
+    const dow = cur.getDay();           // 0=Sun, 6=Sat
+    const ds  = d2s(cur);
+    if(dow !== 0 && dow !== 6 && !holSet.has(ds)) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+function addVac() {
+  const s=document.getElementById('vS').value, e=document.getElementById('vE').value;
+  if(!s||!e) { toast('Selecciona fechas de inicio y fin','warn'); return; }
+  if(s>e)    { toast('La fecha inicio debe ser anterior al fin','warn'); return; }
+  const workDays = workingDays(s, e);
+  const calDays  = Math.round((new Date(e)-new Date(s))/86400000)+1;
+  const skipped  = calDays - workDays;
+  S.vacs.push({start:s, end:e, desc:document.getElementById('vD').value,
+               dest:document.getElementById('vDest').value,
+               workDays, calDays});
+  S.enjoyD += workDays;
+  document.getElementById('inpEnj').value = S.enjoyD;
+  updStats(); renderCal(); saveS();
+  if(S.ghConnected) ghPush(true); // auto-push to GitHub
+  closeM('mVac');
+  const note = skipped > 0 ? ` (${skipped} fin${skipped>1?'es':''}  de semana/festivo${skipped>1?'s':''} excluidos)` : '';
+  toast(`✓ ${workDays} días hábiles añadidos${note}`,'ok');
+}
+
+function updStats() {
+  S.totalD = parseInt(document.getElementById('inpTot').value)||22;
+  S.enjoyD = parseInt(document.getElementById('inpEnj').value)||0;
+  const p = Math.max(0,S.totalD-S.enjoyD);
+  document.getElementById('sTotal').textContent=S.totalD;
+  document.getElementById('sEnj').textContent=S.enjoyD;
+  document.getElementById('sPen').textContent=p;
+  const pct = S.totalD>0?Math.min(100,S.enjoyD/S.totalD*100):0;
+  document.getElementById('pFil').style.width=pct+'%';
+  document.getElementById('pTxt').textContent=`${S.enjoyD} de ${S.totalD} días hábiles usados`;
+  renderVacList();
+  saveS();
+}
+
+function renderVacList() {
+  const el = document.getElementById('vacList'); if(!el) return;
+  if(!S.vacs.length) { el.innerHTML='<div style="font-size:.74rem;color:var(--txt3)">Sin vacaciones añadidas</div>'; return; }
+  el.innerHTML = [...S.vacs].reverse().map((v,ri) => {
+    const i = S.vacs.length-1-ri;
+    const wd = v.workDays || v.calDays || 0;
+    return `<div class="vac-item" onclick="openM('mDay')">
+      <div class="vac-item-title">${v.dest||v.desc||'Vacación'}</div>
+      <div class="vac-item-meta">${fmtD(v.start)} → ${fmtD(v.end)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px">
+        <span class="wday-pill" style="font-size:.65rem">${wd} día${wd!==1?'s':''} hábil${wd!==1?'es':''}</span>
+        <button onclick="event.stopPropagation();delVac(${i})" class="delbtn" style="font-size:.7rem">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function delVac(i) {
+  const v = S.vacs[i];
+  if(!v) return;
+  S.enjoyD = Math.max(0, S.enjoyD - (v.workDays || v.calDays || 0));
+  document.getElementById('inpEnj').value = S.enjoyD;
+  S.vacs.splice(i,1);
+  updStats(); renderCal(); saveS();
+  if(S.ghConnected) ghPush(true);
+  toast('✓ Vacación eliminada','inf');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOLIDAYS
+// ═══════════════════════════════════════════════════════
+// calFilter drives BOTH the list AND the calendar highlight
+let calFilter = { country: 'all', type: 'all' };  // 'all' means show everything
+
+function setHolCountry(c) {
+  // Map tab id → filter value
+  calFilter.country = c === 'es' ? 'ES' : c === 'pl' ? 'PL' : 'all';
+  document.querySelectorAll('.hct').forEach(el => el.classList.remove('on'));
+  document.getElementById('hct-'+c).classList.add('on');
+  // Show/hide ES region selector
+  document.getElementById('holFilters').style.display = (c==='pl') ? 'none' : 'grid';
+  renderHolList();
+  renderCal(); // ← sync calendar
+}
+
+function loadHols() {
+  const reg = document.getElementById('regSel').value;
+  const yr = document.getElementById('yrSel').value;
+  if(reg==='custom') return;
+  const base   = HOLS_DB[`es_nacional_${yr}`]||[];
+  const aut    = HOLS_DB[`${reg}_${yr}`]||[];
+  const pl     = HOLS_DB[`pl_nacional_${yr}`]||[];
+  const custom = S.hols.filter(h=>h._custom);
+  S.hols = [...base, ...aut, ...pl, ...custom];
+  saveS(); renderCal(); renderHolList();
+}
+
+// Returns the holidays that should be VISIBLE given current calFilter
+function visibleHols() {
+  let items = S.hols;
+  if(calFilter.country !== 'all') items = items.filter(h => h.country === calFilter.country);
+  if(calFilter.type    !== 'all') items = items.filter(h => h.type    === calFilter.type);
+  return items;
+}
+
+function renderHolList() {
+  const list = document.getElementById('holList'); if(!list) return;
+  const show = document.getElementById('holShow')?.value || 'all';
+  // Apply type filter on top of country filter
+  calFilter.type = show;
+  let items = visibleHols();
+  items = [...items].sort((a,b)=>a.date.localeCompare(b.date));
+  list.innerHTML = items.map((h) => {
+    const flag   = h.country==='PL'?'🇵🇱':'🇪🇸';
+    const typCls = h.country==='PL'?'pl':(h.type==='autonómico'?'aut':h.type==='local'?'loc':'es');
+    return `<div class="hi">
+      <div>
+        <div style="display:flex;align-items:center;gap:5px"><span>${flag}</span><span style="font-size:.8rem">${h.name}</span></div>
+        <span class="hi-type ${typCls}">${h.type}${h._custom?' · personalizado':''}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="hi-date" style="color:${h.country==='PL'?'var(--acc5)':'var(--acc4)'}">${fmtD(h.date)}</span>
+        ${h._custom?`<button class="delbtn" onclick="delHol(${S.hols.indexOf(h)})">✕</button>`:''}
+      </div>
+    </div>`;
+  }).join('') || `<div style="color:var(--txt2);font-size:.81rem;padding:12px 0">No hay festivos para mostrar con los filtros actuales.</div>`;
+}
+
+function addHol() {
+  const n=document.getElementById('hName').value, d=document.getElementById('hDate').value;
+  if(!n||!d) { toast('Rellena todos los campos','warn'); return; }
+  S.hols.push({name:n, date:d, type:document.getElementById('hType').value, country:document.getElementById('hCountry').value, _custom:true});
+  saveS(); renderCal(); renderHolList(); closeM('mHol');
+  toast(`✓ Festivo añadido: ${n}`,'ok');
+}
+function delHol(i) { S.hols.splice(i,1); saveS(); renderCal(); renderHolList(); }
+
+// ═══════════════════════════════════════════════════════
+//  TABS / MODALS
+// ═══════════════════════════════════════════════════════
+function swTab(n) {
+  const names=['cal','trips','hols','alr'];
+  // Desktop tabs
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',names[i]===n));
+  // Mobile bottom nav tabs
+  names.forEach(name => {
+    const el = document.getElementById('mt-'+name);
+    if(el) el.classList.toggle('on', name===n);
+  });
+  // Panes
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pane-'+n).classList.add('on');
+  if(n==='hols') renderHolList();
+  if(n==='trips') applyF();
+  // On mobile, close sidebar when switching tabs
+  if(window.innerWidth <= 860) {
+    const side = document.getElementById('sideEl');
+    if(side) side.classList.remove('open');
+    const tog = document.getElementById('sideToggle');
+    if(tog) tog.classList.remove('on');
+  }
+}
+
+function toggleSide() {
+  const side = document.getElementById('sideEl');
+  const tog = document.getElementById('sideToggle');
+  if(!side) return;
+  side.classList.toggle('open');
+  tog.classList.toggle('on');
+  tog.innerHTML = side.classList.contains('open') 
+    ? '✕ <span>Cerrar</span>' 
+    : '☰ <span>Resumen</span>';
+}
+function openM(id) {
+  if(id==='mSet') document.getElementById('sOrigin').value=S.origin;
+  if(id==='mManageVisited') { setTimeout(renderVisitedModal, 50); }
+  document.getElementById(id).classList.add('open');
+}
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+function saveSet() {
+  const o = (document.getElementById('sOrigin').value || '').trim();
+  if(o) {
+    S.origin = o;
+    document.getElementById('oInp').value = o;
+    const k = o.toLowerCase();
+    S.oC = CITY_C[k] || guessCoords(k) || {lat:40.42,lon:-3.70};
+  }
+  saveS(); applyF(); genWkOpps(); closeM('mSet');
+  toast('✓ Origen actualizado: ' + S.origin, 'ok');
+}
+
+// ═══════════════════════════════════════════════════════
+//  ALERTS & SHEETS
+// ═══════════════════════════════════════════════════════
+function saveEmail() {
+  const e=document.getElementById('aEmail').value;
+  if(!e||!e.includes('@')) { toast('Introduce un email válido','warn'); return; }
+  S.alertEmail=e; document.getElementById('aEmailMain').value=e; saveS();
+  toast(`✓ Email guardado: ${e}`,'ok');
+}
+function saveAlrCfg() {
+  const e = document.getElementById('aEmailMain').value;
+  if(!e || !e.includes('@')) { toast('Introduce un email válido','warn'); return; }
+  const sid = (document.getElementById('ejsServiceId')?.value||'').trim();
+  const tid = (document.getElementById('ejsTemplateId')?.value||'').trim();
+  const pk  = (document.getElementById('ejsPublicKey')?.value||'').trim();
+  S.alertEmail = e;
+  S.ejsServiceId  = sid;
+  S.ejsTemplateId = tid;
+  S.ejsPublicKey  = pk;
+  document.getElementById('aEmail').value = e;
+  saveS();
+  toast('✓ Configuración guardada','ok');
+  // Init EmailJS if keys present
+  if(sid && tid && pk) {
+    initEmailJS();
+    // Send a real test email
+    setTimeout(() => sendTestAlert(), 800);
+  } else {
+    toast('⚠ Rellena los campos de EmailJS para recibir alertas reales','warn');
+  }
+}
+
+function initEmailJS() {
+  if(window.emailjs && S.ejsPublicKey) {
+    try { emailjs.init({ publicKey: S.ejsPublicKey }); } catch(e) {}
+  }
+}
+
+async function sendTestAlert() {
+  if(!S.ejsServiceId || !S.ejsTemplateId || !S.ejsPublicKey || !S.alertEmail) return;
+  toast('📧 Enviando alerta de prueba…','inf');
+  try {
+    await emailjs.send(S.ejsServiceId, S.ejsTemplateId, {
+      to_email:   S.alertEmail,
+      subject:    '✅ Wanderlust — Test de alertas',
+      message:    'Las alertas de Wanderlust están configuradas correctamente. Recibirás notificaciones sobre festivos, escapadas y recordatorios de vacaciones.',
+      from_name:  'Wanderlust Planeador',
+      reply_to:   S.alertEmail,
+    });
+    toast('✅ Email de prueba enviado correctamente a '+S.alertEmail,'ok');
+  } catch(err) {
+    toast('❌ Error al enviar: '+(err.text||err.message||JSON.stringify(err)),'warn');
+  }
+}
+
+async function sendAlert(subject, message) {
+  if(!S.ejsServiceId || !S.ejsTemplateId || !S.ejsPublicKey || !S.alertEmail) return false;
+  try {
+    await emailjs.send(S.ejsServiceId, S.ejsTemplateId, {
+      to_email:  S.alertEmail,
+      subject,
+      message,
+      from_name: 'Wanderlust Planeador',
+      reply_to:  S.alertEmail,
+    });
+    return true;
+  } catch(e) { return false; }
+}
+
+// Check and fire scheduled alerts
+function checkAlerts() {
+  if(!S.ejsServiceId || !S.alertEmail) return;
+  const today = d2s(new Date());
+  const todayDate = new Date(today);
+  // Alert: upcoming holiday in next 7 days
+  if(document.getElementById('aHol')?.checked) {
+    const upcoming = S.hols.filter(h => {
+      const hDate = new Date(h.date+'T00:00:00');
+      const diff = (hDate - todayDate) / 86400000;
+      return diff >= 0 && diff <= 7;
+    });
+    if(upcoming.length) {
+      const list = upcoming.map(h => `• ${h.name} (${fmtD(h.date)})`).join('\n');
+      sendAlert(
+        `🎉 Wanderlust — ${upcoming.length} festivo${upcoming.length>1?'s':''} próximo${upcoming.length>1?'s':''}`,
+        `Tienes festivos en los próximos 7 días:\n\n${list}\n\n¿Aprovechas para escaparte?`
+      );
+    }
+  }
+  // Alert: unused vacation days (< 5 remaining and end of year approaching)
+  if(document.getElementById('aVac')?.checked) {
+    const pending = Math.max(0, S.totalD - S.enjoyD);
+    const daysToEndYear = (new Date(new Date().getFullYear(),11,31) - todayDate) / 86400000;
+    if(pending > 0 && daysToEndYear < 60) {
+      sendAlert(
+        `⏰ Wanderlust — Te quedan ${pending} días de vacaciones`,
+        `Te quedan ${pending} día${pending>1?'s':''} hábil${pending>1?'es':''} de vacaciones y quedan menos de 60 días para fin de año. ¡Planifica ya tu escapada!`
+      );
+    }
+  }
+  // Alert: weekend trip suggestion
+  if(document.getElementById('aWknd')?.checked) {
+    const dow = todayDate.getDay();
+    if(dow === 4) { // Thursday — suggest a weekend trip
+      const topDest = DESTS.map(d=>({...d,cd:dist(d)})).sort((a,b)=>a.cd-b.cd).slice(0,3);
+      const list = topDest.map(d=>`• ${d.emoji} ${d.name} (${d.cd}km)`).join('\n');
+      sendAlert(
+        `✈️ Wanderlust — Sugerencias para este fin de semana`,
+        `¡Este fin de semana tienes una escapada perfecta desde ${S.origin}!\n\n${list}\n\nRevisa tus sugerencias en el planeador.`
+      );
+    }
+  }
+}
+function selFrq(el) { document.querySelectorAll('.ac .chips .chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); }
+// ═══════════════════════════════════════════════════════
+//  SYNC — METHOD A: JSON EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════
+function exportJSON() {
+  const data = buildExportPayload();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wanderlust-datos-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  toast('⬇ Datos exportados como JSON','ok');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      applyImport(data);
+    } catch(err) { toast('❌ Archivo JSON no válido','warn'); }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be re-imported
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('importDropZone').classList.remove('over');
+  const file = event.dataTransfer.files[0];
+  if(!file || !file.name.endsWith('.json')) { toast('Selecciona un archivo .json válido','warn'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try { applyImport(JSON.parse(e.target.result)); }
+    catch(err) { toast('❌ Archivo JSON no válido','warn'); }
+  };
+  reader.readAsText(file);
+}
+
+function applyImport(data) {
+  if(!data || !data._wl) { toast('❌ El archivo no es de Wanderlust','warn'); return; }
+  const fields = ['origin','oC','totalD','enjoyD','alertEmail','ejsServiceId','ejsTemplateId','vacs','hols','fTypes','fTp','fDist','fTime','fBudget','shUrl',
+                   'visited','fVisited',
+                   'ghToken','ghGistId','ghConnected','_lastSaved'];
+  fields.forEach(k => { if(data[k] !== undefined) S[k] = data[k]; });
+  // Refresh UI
+  document.getElementById('inpTot').value = S.totalD;
+  document.getElementById('inpEnj').value = S.enjoyD;
+  document.getElementById('oInp').value = S.origin;
+  if(S.alertEmail) { document.getElementById('aEmail').value = S.alertEmail; document.getElementById('aEmailMain').value = S.alertEmail; }
+  if(S.shUrl) document.getElementById('shUrl').value = S.shUrl;
+  // Suppress auto-push when loading data from GitHub to prevent push-pull loops
+  _suppressGhPush = true;
+  saveS(true);
+  updStats(); renderCal(); renderHolList(); applyF(); genWkOpps();
+  setTimeout(() => { _suppressGhPush = false; }, 500);
+  toast(`✓ Datos importados — ${S.vacs.length} vacaciones, ${S.hols.filter(h=>h._custom).length} festivos personalizados`,'ok');
+}
+
+function buildExportPayload() {
+  return {
+    _wl: 1, _v: '4.1', _exported: new Date().toISOString(),
+    _lastSaved: new Date().toISOString(),
+    origin: S.origin, oC: S.oC,
+    totalD: S.totalD, enjoyD: S.enjoyD,
+    alertEmail:     S.alertEmail,
+    ejsServiceId:   S.ejsServiceId  || '',
+    ejsTemplateId:  S.ejsTemplateId || '',
+    // Note: ejsPublicKey intentionally not exported for security (like ghToken)
+    vacs: S.vacs,
+    visited: S.visited || [],
+    hols: S.hols.filter(h => h._custom),
+    fTypes: S.fTypes, fTp: S.fTp, fDist: S.fDist, fTime: S.fTime, fBudget: S.fBudget,
+    shUrl: S.shUrl || '',
+    // Note: ghToken is intentionally excluded from exports for security
+    // It is only stored in localStorage on the device that created it
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+//  SYNC — METHOD B: SAVE HTML WITH EMBEDDED DATA
+// ═══════════════════════════════════════════════════════
+function saveHTMLWithData() {
+  toast('⏳ Generando archivo HTML…','inf');
+  const payload = buildExportPayload();
+  // Get the current full HTML
+  let html = document.documentElement.outerHTML;
+  // Inject a script tag right before </body> that loads the data on startup
+  const injection = `<script>
+// ── WANDERLUST EMBEDDED DATA ──
+(function(){
+  const embedded = ${JSON.stringify(payload)};
+  const existing = localStorage.getItem('wl_v4');
+  // Only inject if localStorage is empty OR older than this embed
+  if(!existing) {
+    localStorage.setItem('wl_v4', JSON.stringify(Object.assign({}, embedded)));
+  } else {
+    try {
+      const ex = JSON.parse(existing);
+      const emDate = new Date(embedded._exported||0);
+      const exDate = new Date(ex._exported||0);
+      if(emDate > exDate) localStorage.setItem('wl_v4', JSON.stringify(Object.assign({}, embedded)));
+    } catch(e) { localStorage.setItem('wl_v4', JSON.stringify(Object.assign({}, embedded))); }
+  }
+})();
+<\/script>`;
+  // Remove any previous embedded data script
+  html = html.replace(/<script>\s*\/\/ ── WANDERLUST EMBEDDED DATA ──[\s\S]*?<\/script>/g, '');
+  // Insert before closing body tag
+  html = html.replace('</body>', injection + '\n</body>');
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wanderlust-' + dateStr + '.html';
+  setTimeout(() => { a.click(); toast('💾 HTML con datos guardado — ábrelo en cualquier ordenador','ok'); }, 400);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SYNC — METHOD C: GOOGLE SHEETS (Apps Script)
+// ═══════════════════════════════════════════════════════
+function conSheets() {
+  const url = (document.getElementById('shUrl')||{}).value?.trim();
+  if(!url || !url.startsWith('https://script.google.com')) {
+    toast('Introduce la URL del Apps Script (empieza por https://script.google.com…)','warn'); return;
+  }
+  S.shUrl = url; saveS();
+  pushSheets();
+}
+
+async function pushSheets() {
+  const url = S.shUrl;
+  if(!url) { toast('Configura primero la URL del Apps Script','warn'); swTab('alr'); return; }
+  toast('📊 Guardando en Google Sheets…','inf');
+  try {
+    const payload = buildExportPayload();
+    // Apps Script Web Apps don't support CORS POST easily from file:// origins.
+    // We use no-cors mode and confirm via a GET afterwards.
+    await fetch(url, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'save', payload})
+    });
+    S.shConn = true; saveS();
+    document.getElementById('shSts').className='sts ok';
+    document.getElementById('shSts').innerHTML='<span class="sdot"></span> Sincronizado';
+    toast('✓ Datos enviados a Google Sheets','ok');
+  } catch(e) {
+    toast('❌ Error al conectar con Sheets: ' + e.message,'warn');
+  }
+}
+
+async function pullSheets() {
+  const url = S.shUrl;
+  if(!url) { toast('Configura primero la URL del Apps Script','warn'); return; }
+  toast('📊 Cargando datos desde Google Sheets…','inf');
+  try {
+    const res = await fetch(url + '?action=load');
+    const json = await res.json();
+    if(json.data) {
+      const data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
+      applyImport(data);
+      toast('✓ Datos cargados desde Google Sheets','ok');
+    } else { toast('La hoja está vacía o sin datos Wanderlust','warn'); }
+  } catch(e) {
+    toast('❌ Error al leer Sheets: ' + e.message,'warn');
+  }
+}
+
+
+
+function copyGsCode() {
+  const code = document.getElementById('gsCode')?.textContent || '';
+  navigator.clipboard.writeText(code).then(()=>toast('✓ Código copiado al portapapeles','ok')).catch(()=>toast('Selecciona y copia el código manualmente','warn'));
+}
+
+// ═══════════════════════════════════════════════════════
+//  CSV EXPORT (utility)
+// ═══════════════════════════════════════════════════════
+function expCSV() {
+  const rows=[['Tipo','País','Nombre','Inicio','Fin','Destino'],
+    ...S.hols.map(h=>['Festivo',h.country||'ES',h.name,h.date,h.date,'']),
+    ...S.vacs.map(v=>['Vacación','',v.desc||'Vacación',v.start,v.end,v.dest||''])];
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='vacaciones-wanderlust.csv'; a.click();
+  toast('✓ CSV exportado','ok');
+}
+
+// ═══════════════════════════════════════════════════════
+//  GITHUB GIST SYNC  (v3 — CORS-safe, no SHA conflicts)
+//  Uses GitHub Gist API: api.github.com/gists
+//  - CORS fully open, works from any origin (file://, Pages, etc.)
+//  - PATCH gist is atomic — no SHA required
+//  - Token only needs "gist" scope (not "repo")
+// ═══════════════════════════════════════════════════════
+const GH_GIST_API = 'https://api.github.com/gists';
+const GH_GIST_FILE = 'wanderlust-data.json';
+let _ghPushLock = false;
+let _ghPullLock = false;
+
+// ── Decode base64 content safely (handles UTF-8 / accents / ñ) ──
+function ghDecodeContent(b64) {
+  const clean = b64.replace(/\s/g, '');
+  const bytes = Uint8Array.from(atob(clean), ch => ch.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function ghUpdStatus(ok, msg, err=false) {
+  const el = document.getElementById('ghSts');
+  if(el) { el.className = ok ? 'sts ok' : 'sts ko'; el.innerHTML = `<span class="sdot"></span> ${msg}`; }
+  const dot = document.getElementById('hdrSyncDot');
+  const icon = document.getElementById('hdrSyncIcon');
+  if(dot) {
+    dot.style.display = 'inline-flex';
+    dot.className = 'hdr-sync-dot ' + (ok ? 'ok' : err ? 'err' : 'warn');
+    dot.title = msg;
+    if(icon) icon.textContent = ok ? '☁️' : err ? '⚠️' : '⏳';
+  }
+}
+
+// ── Connect: verify token, find or create the Wanderlust gist ──
+async function ghSetup() {
+  const token = (document.getElementById('ghToken')?.value || '').trim();
+  if(!token) { toast('Pega tu Personal Access Token (scope: gist)','warn'); return; }
+  ghUpdStatus(false,'⏳ Verificando token…');
+
+  try {
+    // 1. Verify token is valid by calling /user
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if(userRes.status === 401 || userRes.status === 403) {
+      ghUpdStatus(false,'❌ Token inválido — revisa el scope "gist"', true);
+      toast('Token inválido. Asegúrate de marcar el scope ✓ gist al crearlo.','warn');
+      return;
+    }
+    if(!userRes.ok) {
+      const e = await userRes.json().catch(()=>({}));
+      ghUpdStatus(false,'❌ Error: '+(e.message||userRes.status), true);
+      toast('Error verificando token: '+(e.message||userRes.status),'warn'); return;
+    }
+    const userData = await userRes.json();
+    const ghUser = userData.login;
+
+    // 2. Look for existing Wanderlust gist in user's gists
+    const listRes = await fetch(`${GH_GIST_API}?per_page=100`, {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if(!listRes.ok) {
+      ghUpdStatus(false,'❌ No se pudieron listar los gists', true);
+      toast('Error listando gists','warn'); return;
+    }
+    const gists = await listRes.json();
+    let gistId = '';
+    for(const g of gists) {
+      if(g.files && g.files[GH_GIST_FILE]) { gistId = g.id; break; }
+    }
+
+    // 3. Create gist if not found
+    if(!gistId) {
+      const createRes = await fetch(GH_GIST_API, {
+        method: 'POST',
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          description: 'Wanderlust — Planeador de Vacaciones (sync data)',
+          public: false,
+          files: { [GH_GIST_FILE]: { content: JSON.stringify({_wl:1, _created:new Date().toISOString()}) } }
+        })
+      });
+      if(!createRes.ok) {
+        const e = await createRes.json().catch(()=>({}));
+        ghUpdStatus(false,'❌ No se pudo crear el gist: '+(e.message||createRes.status), true);
+        toast('Error creando gist. ¿Tiene el token el scope "gist"?','warn'); return;
+      }
+      const created = await createRes.json();
+      gistId = created.id;
+      toast('✓ Gist creado en tu cuenta GitHub','ok');
+    }
+
+    // 4. Save config
+    S.ghToken = token; S.ghGistId = gistId; S.ghConnected = true;
+    S._lastSaved = S._lastSaved || new Date(0).toISOString();
+    saveS(true);
+
+    // Show gist ID in UI
+    const row = document.getElementById('ghGistIdRow'); if(row) row.style.display='';
+    const gidEl = document.getElementById('ghGistId'); if(gidEl) gidEl.value = gistId;
+    const btn = document.getElementById('ghConnectBtn'); if(btn) btn.textContent = '✓ Conectado';
+
+    ghUpdStatus(true,'✓ Conectado — sincronizando…');
+    toast('✓ GitHub Gist conectado (@'+ghUser+')','ok');
+
+    // Pull first (load remote data if newer), then push
+    await ghAutoLoad();
+    setTimeout(() => { if(S.ghConnected) ghPush(true); }, 1500);
+
+  } catch(e) {
+    ghUpdStatus(false,'❌ Error de red: '+e.message, true);
+    toast('Error de red al conectar: '+e.message,'warn');
+  }
+}
+
+// ── Push: save data to Gist (PATCH — no SHA needed) ──
+async function ghPush(silent=false) {
+  if(!S.ghConnected || !S.ghToken || !S.ghGistId) return;
+  if(_ghPushLock) return;
+  _ghPushLock = true;
+  ghUpdStatus(true,'⏳ Guardando…');
+  try {
+    const payload = buildExportPayload();
+    payload._lastSaved = new Date().toISOString();
+    const res = await fetch(`${GH_GIST_API}/${S.ghGistId}`, {
+      method: 'PATCH',
+      headers: { Authorization:`token ${S.ghToken}`, Accept:'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify({ files: { [GH_GIST_FILE]: { content: JSON.stringify(payload, null, 2) } } })
+    });
+    if(res.ok) {
+      S._lastSaved = payload._lastSaved;
+      localStorage.setItem('wl_v4', JSON.stringify(S));
+      ghUpdStatus(true,'✓ Sync · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+      if(!silent) toast('☁️ Guardado en GitHub Gist','ok');
+    } else if(res.status===401 || res.status===403) {
+      ghUpdStatus(false,'❌ Token expirado o sin permiso "gist"', true);
+      toast('Token expirado. Ve a Alertas y reconecta con un token nuevo.','warn');
+      S.ghConnected = false; saveS(true);
+    } else {
+      const e = await res.json().catch(()=>({}));
+      const msg = e.message||('HTTP '+res.status);
+      ghUpdStatus(false,'⚠ '+msg, true);
+      if(!silent) toast('⚠ Error al guardar: '+msg,'warn');
+      setTimeout(()=>ghPush(true), 30000);
+    }
+  } catch(e) {
+    ghUpdStatus(false,'⚠ Sin conexión');
+    setTimeout(()=>ghPush(true), 30000);
+  } finally {
+    _ghPushLock = false;
+  }
+}
+
+// ── Pull: load data from Gist ──
+async function ghPull() {
+  if(!S.ghToken || !S.ghGistId) { toast('Primero conecta GitHub Gist en Alertas','warn'); swTab('alr'); return; }
+  if(_ghPullLock) return;
+  _ghPullLock = true;
+  ghUpdStatus(false,'⏳ Cargando desde Gist…');
+  try {
+    const res = await fetch(`${GH_GIST_API}/${S.ghGistId}`, {
+      headers: { Authorization:`token ${S.ghToken}`, Accept:'application/vnd.github.v3+json', 'Cache-Control':'no-cache' }
+    });
+    if(res.status===401||res.status===403) {
+      ghUpdStatus(false,'❌ Token inválido o expirado', true);
+      toast('Token expirado. Reconecta en la pestaña Alertas.','warn');
+      S.ghConnected=false; saveS(true); return;
+    }
+    if(!res.ok) {
+      const e=await res.json().catch(()=>({}));
+      ghUpdStatus(false,'⚠ '+(e.message||'Error '+res.status), true); return;
+    }
+    const gist = await res.json();
+    const file = gist.files?.[GH_GIST_FILE];
+    if(!file) { ghUpdStatus(true,'✓ Gist OK — sin datos aún'); return; }
+    const raw = file.truncated
+      ? await (await fetch(file.raw_url)).text()
+      : file.content;
+    const data = JSON.parse(raw);
+    const remoteDate = new Date(data._lastSaved||0);
+    const localDate  = new Date(S._lastSaved||0);
+    if(remoteDate <= localDate) {
+      ghUpdStatus(true,'✓ Al día · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+      return;
+    }
+    applyImport(data);
+    S._lastSaved = data._lastSaved;
+    saveS(true);
+    ghUpdStatus(true,'✓ Actualizado · '+new Date(data._lastSaved).toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+    toast('☁️ Datos cargados desde GitHub Gist','ok');
+  } catch(e) {
+    ghUpdStatus(false,'⚠ Error al cargar: '+e.message, true);
+  } finally {
+    _ghPullLock = false;
+  }
+}
+
+// ── Auto-load on startup ──
+async function ghAutoLoad() {
+  if(!S.ghConnected||!S.ghToken||!S.ghGistId) return;
+  if(_ghPullLock) return;
+  _ghPullLock = true;
+  try {
+    const res = await fetch(`${GH_GIST_API}/${S.ghGistId}`,
+      { headers:{ Authorization:`token ${S.ghToken}`, Accept:'application/vnd.github.v3+json', 'Cache-Control':'no-cache' }});
+    if(res.status===401||res.status===403) {
+      ghUpdStatus(false,'❌ Token expirado — reconecta', true);
+      toast('Token de GitHub expirado. Ve a Alertas y vuelve a conectar.','warn');
+      S.ghConnected=false; saveS(true); return;
+    }
+    if(!res.ok) { ghUpdStatus(false,'⚠ Error '+res.status); return; }
+    const gist = await res.json();
+    const file = gist.files?.[GH_GIST_FILE];
+    if(!file) { ghUpdStatus(true,'✓ Conectado · sin datos remotos'); return; }
+    const raw = file.truncated ? await (await fetch(file.raw_url)).text() : file.content;
+    const data = JSON.parse(raw);
+    const remoteDate = new Date(data._lastSaved||0);
+    const localDate  = new Date(S._lastSaved||0);
+    if(remoteDate > localDate) {
+      applyImport(data); S._lastSaved = data._lastSaved; saveS(true);
+      ghUpdStatus(true,'✓ Sync · '+new Date(data._lastSaved).toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+      toast('☁️ Datos sincronizados desde GitHub','ok');
+    } else {
+      ghUpdStatus(true,'✓ Sync activo · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+    }
+  } catch(e) {
+    ghUpdStatus(false,'⚠ Sin conexión (reintento en 30s)');
+    setTimeout(ghAutoLoad, 30000);
+  } finally {
+    _ghPullLock = false;
+  }
+}
+
+// ── Periodic sync every 90s ──
+setInterval(() => {
+  if(document.visibilityState==='visible' && S.ghConnected && S.ghToken && S.ghGistId && !_ghPullLock)
+    ghAutoLoad();
+}, 90000);
+
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState==='visible' && S.ghConnected && S.ghToken && S.ghGistId && !_ghPullLock)
+    setTimeout(ghAutoLoad, 800);
+});
+
+// ── syncSheets header button ──
+function syncSheets() {
+  if(S.ghConnected && S.ghGistId) { ghPush(false); return; }
+  if(!S.shUrl) { toast('Configura sincronización en Alertas','warn'); swTab('alr'); return; }
+  pushSheets();
+}
+
+// ═══════════════════════════════════════════════════════
+//  GITHUB HELPERS
+// ═══════════════════════════════════════════════════════
+function toggleTokenVis() {
+  const inp=document.getElementById('ghToken'), eye=document.getElementById('tokEye');
+  if(!inp) return;
+  inp.type = inp.type==='password' ? 'text' : 'password';
+  if(eye) eye.textContent = inp.type==='password' ? '👁' : '🙈';
+}
+function ghDisconnect() {
+  S.ghConnected=false; S.ghToken=''; S.ghGistId=''; S._lastSaved='';
+  saveS(true); ghUpdStatus(false,'No conectado');
+  const inp=document.getElementById('ghToken'); if(inp) inp.value='';
+  const gidEl=document.getElementById('ghGistId'); if(gidEl) gidEl.value='';
+  const row=document.getElementById('ghGistIdRow'); if(row) row.style.display='none';
+  const btn=document.getElementById('ghConnectBtn'); if(btn) btn.textContent='🔗 Conectar';
+  toast('✓ Desconectado de GitHub','inf');
+}
+
+// ═══════════════════════════════════════════════════════
+//  DEVICE DETECTION & ADAPTIVE LAYOUT
+// ═══════════════════════════════════════════════════════
+function detectDevice() {
+  const w = window.innerWidth;
+  const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  const hasMouse = window.matchMedia('(pointer:fine)').matches;
+  // Desktop = wide screen with fine pointer (mouse), even if touchscreen
+  const forceDesktop = hasMouse && w > 1024;
+  const ua = navigator.userAgent;
+  const isTablet = touch && w >= 540 && w <= 1366;
+  const isPhone  = touch && w < 540;
+  const isMobile = isPhone || isTablet;
+  // Classify
+  let cls = 'dev-desktop';
+  if(forceDesktop)  cls = 'dev-desktop';
+  else if(isPhone)  cls = 'dev-phone';
+  else if(isTablet) cls = 'dev-tablet';
+  // Remove previous classes
+  document.documentElement.classList.remove('dev-phone','dev-tablet','dev-desktop');
+  document.documentElement.classList.add(cls);
+  // Show brief badge
+  showDevBadge(cls);
+  // On desktop: ensure sidebar is always visible
+  if(cls === 'dev-desktop') {
+    const side = document.getElementById('sideEl');
+    if(side) { side.style.maxHeight=''; side.style.padding=''; side.style.overflow=''; }
+  }
+  return cls;
+}
+
+let _badgeShown = false;
+function showDevBadge(cls) {
+  if(_badgeShown) return; // only show once per session
+  _badgeShown = true;
+  let el = document.getElementById('devBadge');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'devBadge';
+    el.className = 'dev-badge';
+    document.body.appendChild(el);
+  }
+  const labels = {'dev-phone':'📱 Móvil','dev-tablet':'📲 Tablet','dev-desktop':'🖥️ Escritorio'};
+  el.textContent = labels[cls] || cls;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Periodic sync: every 90s if tab visible and connected — delegates to ghAutoLoad (has its own lock)
+setInterval(() => {
+  if(document.visibilityState === 'visible' && S.ghConnected && S.ghToken && !_ghPullLock) {
+    ghAutoLoad();
+  }
+}, 90000);
+
+// Pull when tab becomes visible (user switches back from another app/tab)
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && S.ghConnected && S.ghToken && !_ghPullLock) {
+    setTimeout(ghAutoLoad, 800);
+  }
+});
+
+// Re-detect on resize (throttled)
+let _resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(detectDevice, 200);
+});
+
+// ═══════════════════════════════════════════════════════
+//  GITHUB HELPERS
+// ═══════════════════════════════════════════════════════
+function toggleTokenVis() {
+  const inp = document.getElementById('ghToken');
+  const eye = document.getElementById('tokEye');
+  if(!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  if(eye) eye.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function ghDisconnect() {
+  S.ghConnected = false; S.ghToken = ''; S.ghGistId = ''; S._lastSaved = '';
+  saveS();
+  ghUpdStatus(false, 'No conectado');
+  const inp = document.getElementById('ghToken');
+  if(inp) inp.value = '';
+  toast('✓ GitHub desconectado','inf');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='inf') {
+  const icons={ok:'✓',inf:'ℹ',warn:'⚠'};
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.innerHTML=`<span class="ti">${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toastBox').appendChild(t);
+  setTimeout(()=>t.remove(),4200);
+}
+function fmtD(s) { const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}); }
+
+// Handle orientation change
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if(window.innerWidth > 860) {
+      const side = document.getElementById('sideEl');
+      if(side) { side.classList.remove('open'); side.style.maxHeight=''; }
+    }
+  }, 300);
+});
+
+// Prevent page zoom on double-tap for inputs (iOS)
+document.addEventListener('touchstart', function(e){
+  if(e.touches.length > 1) e.preventDefault();
+}, {passive:false});
+
+// START
+init();
+</script>
+</body>
+</html>
