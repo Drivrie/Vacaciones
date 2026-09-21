@@ -1073,6 +1073,22 @@ html.dev-phone .app{grid-template-columns:1fr}
         </div>
       </div>
 
+      <!-- Online sync status + manual refresh -->
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;
+                  padding:6px 10px;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px">
+        <span style="font-size:.68rem;color:var(--txt3)" id="holsSyncStatus">🔄 Sincronizando festivos nacionales…</span>
+        <div style="flex:1"></div>
+        <button class="btn btn-g btn-s" style="font-size:.68rem;padding:3px 9px"
+                onclick="manualSyncHolidays()" title="Vuelve a consultar festivos nacionales online">
+          🔄 Actualizar
+        </button>
+      </div>
+
+      <!-- Hint shown when the selected region has no data for the selected year -->
+      <div id="regionalHint" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;
+                  padding:8px 10px;background:rgba(232,200,122,.08);border:1px solid rgba(232,200,122,.25);
+                  border-radius:7px;font-size:.72rem;color:var(--txt2);line-height:1.6"></div>
+
       <!-- Row 2: Multi-select type chips -->
       <div style="font-size:.68rem;color:var(--txt3);margin-bottom:5px;font-family:'DM Mono',monospace;letter-spacing:.07em;text-transform:uppercase">
         ¿Qué mostrar? <span style="color:var(--txt3);font-weight:400;text-transform:none;letter-spacing:0">(ninguno = todo)</span>
@@ -1697,6 +1713,132 @@ const HOLS_DB = {
 };
 
 // ═══════════════════════════════════════════════════════
+//  ONLINE HOLIDAY SYNC — auto-fetches NATIONAL holidays
+//  for any year via Nager.Date (date.nager.at), free/no-key.
+//  Autonomous/local holidays are NOT covered by any reliable
+//  free API (each Spanish region publishes independently via
+//  BOE/DOGC/etc.), so those stay manually maintained/added.
+// ═══════════════════════════════════════════════════════
+const HOLS_CACHE_KEY = 'wl_hols_online_cache_v1';
+const HOLS_CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+let EXTRA_HOLS_DB = {}; // runtime-populated: same key format as HOLS_DB
+
+function loadHolsCache() {
+  try {
+    const raw = localStorage.getItem(HOLS_CACHE_KEY);
+    if(!raw) return;
+    const cache = JSON.parse(raw);
+    Object.keys(cache).forEach(key => {
+      if(cache[key] && cache[key].data) EXTRA_HOLS_DB[key] = cache[key].data;
+    });
+  } catch(e) { /* corrupt cache, ignore */ }
+}
+
+function saveHolsCacheEntry(key, data) {
+  try {
+    const raw = localStorage.getItem(HOLS_CACHE_KEY);
+    const cache = raw ? JSON.parse(raw) : {};
+    cache[key] = { data, fetchedAt: new Date().toISOString() };
+    localStorage.setItem(HOLS_CACHE_KEY, JSON.stringify(cache));
+  } catch(e) { /* storage full or blocked, ignore */ }
+}
+
+function getHolsCacheTimestamp(key) {
+  try {
+    const raw = localStorage.getItem(HOLS_CACHE_KEY);
+    if(!raw) return null;
+    const cache = JSON.parse(raw);
+    return cache[key]?.fetchedAt || null;
+  } catch(e) { return null; }
+}
+
+function isCacheStale(key) {
+  const ts = getHolsCacheTimestamp(key);
+  if(!ts) return true;
+  return (Date.now() - new Date(ts).getTime()) > HOLS_CACHE_TTL_MS;
+}
+
+// Fetch national public holidays for one country/year from Nager.Date
+async function fetchNagerHolidays(year, countryCode) {
+  const url = `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const raw = await res.json();
+  return raw.map(h => ({
+    date: h.date,
+    name: h.localName || h.name,
+    type: 'nacional',
+    country: countryCode,
+  }));
+}
+
+// Ensure national ES+PL holidays for a given year are available,
+// fetching online only if missing from HOLS_DB and stale/absent in cache.
+// Re-renders the calendar/list when new data arrives.
+async function syncOnlineHolidays(year, force = false) {
+  const jobs = [];
+  for(const cc of ['ES', 'PL']) {
+    const key = `${cc === 'ES' ? 'es' : 'pl'}_nacional_${year}`;
+    const inStaticDB = !!HOLS_DB[key];
+    if(inStaticDB && !force) continue; // hardcoded data already covers this year
+    if(!force && EXTRA_HOLS_DB[key] && !isCacheStale(key)) continue; // fresh cache
+    jobs.push(
+      fetchNagerHolidays(year, cc)
+        .then(data => { EXTRA_HOLS_DB[key] = data; saveHolsCacheEntry(key, data); return true; })
+        .catch(() => false)
+    );
+  }
+  if(!jobs.length) {
+    updHolsSyncStatus('✓ Festivos nacionales al día (' + year + ')');
+    return false;
+  }
+  const results = await Promise.all(jobs);
+  const anySuccess = results.some(r => r);
+  if(anySuccess) {
+    updHolsSyncStatus('✓ Festivos nacionales actualizados · ' +
+      new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+    // Re-render only if the fetched year is the one currently shown
+    const selYr = document.getElementById('yrSel')?.value;
+    if(String(year) === String(selYr)) loadHols();
+  }
+  return anySuccess;
+}
+
+function updHolsSyncStatus(msg) {
+  const el = document.getElementById('holsSyncStatus');
+  if(el) el.textContent = msg;
+}
+
+// Populate the year selector dynamically (today ±1 / +2) so
+// "next year" is always available without editing HTML each year.
+async function manualSyncHolidays() {
+  const yr = document.getElementById('yrSel')?.value || new Date().getFullYear();
+  updHolsSyncStatus('🔄 Consultando fuente oficial…');
+  const ok = await syncOnlineHolidays(Number(yr), true); // force = ignore cache freshness
+  if(ok) {
+    toast('✓ Festivos nacionales actualizados', 'ok');
+  } else {
+    updHolsSyncStatus('✓ Usando datos locales (' + yr + ')');
+    toast('No hay actualización online disponible — usando datos incluidos', 'inf');
+  }
+}
+
+function populateYearSelector() {
+  const sel = document.getElementById('yrSel');
+  if(!sel) return;
+  const nowYr = new Date().getFullYear();
+  const years = [nowYr - 1, nowYr, nowYr + 1, nowYr + 2];
+  const current = sel.value || String(nowYr);
+  sel.innerHTML = years.map(y =>
+    `<option value="${y}"${String(y)===current?' selected':''}>${y}</option>`
+  ).join('');
+  // Default to next year if nothing was selected yet (typical use case: planning ahead)
+  if(!years.map(String).includes(current)) sel.value = String(nowYr);
+}
+
+
+
+// ═══════════════════════════════════════════════════════
 //  CITY COORDS
 // ═══════════════════════════════════════════════════════
 const CITY_C = {
@@ -1780,8 +1922,14 @@ let S = {
 function init() {
   // Detect device type and apply adaptive layout
   detectDevice();
+  loadHolsCache();       // restore any previously fetched online holidays
+  populateYearSelector(); // dynamic year options (today ±1/+2) — always covers "next year"
   loadS(); updStats(); loadHols(); syncHolChips(); updAiKeyStatus();
   applyF(); genWkOpps();
+  // Background sync: fetch national holidays for current + next year if missing/stale
+  const nowYr = new Date().getFullYear();
+  syncOnlineHolidays(nowYr);
+  syncOnlineHolidays(nowYr + 1);
   // Auto-sync with GitHub if configured (or if token+gistId present but disconnected)
   if(S.ghConnected || (S.ghToken && S.ghGistId)) ghAutoLoad();
   // Schedule alert checks — run once on load and daily thereafter
@@ -2807,12 +2955,33 @@ function loadHols() {
   const reg = document.getElementById('regSel').value;
   const yr = document.getElementById('yrSel').value;
   if(reg==='custom') return;
-  const base   = HOLS_DB[`es_nacional_${yr}`]||[];
-  const aut    = HOLS_DB[`${reg}_${yr}`]||[];
-  const pl     = HOLS_DB[`pl_nacional_${yr}`]||[];
+  // Prefer hardcoded HOLS_DB; fall back to online-fetched cache (EXTRA_HOLS_DB)
+  const base   = HOLS_DB[`es_nacional_${yr}`] || EXTRA_HOLS_DB[`es_nacional_${yr}`] || [];
+  const aut    = HOLS_DB[`${reg}_${yr}`] || [];  // regional: no reliable free API, hardcoded only
+  const pl     = HOLS_DB[`pl_nacional_${yr}`] || EXTRA_HOLS_DB[`pl_nacional_${yr}`] || [];
   const custom = S.hols.filter(h=>h._custom);
   S.hols = [...base, ...aut, ...pl, ...custom];
   saveS(); renderCal(); renderHolList();
+  updRegionalHint(reg, yr, aut);
+}
+
+// Show a hint when the selected region has no data for the selected year
+// (common for autonomous communities beyond the hardcoded years, since
+// there is no reliable free API for per-region Spanish holidays)
+function updRegionalHint(reg, yr, autData) {
+  const el = document.getElementById('regionalHint');
+  if(!el) return;
+  if(reg !== 'nacional' && reg !== 'custom' && autData.length === 0) {
+    el.style.display = 'flex';
+    el.innerHTML = `⚠ Sin datos autonómicos cargados para ${yr}. Añádelos manualmente con
+      <button class="btn btn-g btn-s" style="font-size:.68rem;padding:2px 8px"
+              onclick="resetHolModal();document.getElementById('hType').value='autonómico';openM('mHol')">
+        ＋ Añadir festivo
+      </button>
+      cuando se publiquen en el boletín oficial de tu comunidad.`;
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 // Returns the holidays that should be VISIBLE given current calFilter
