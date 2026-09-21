@@ -1797,9 +1797,10 @@ async function syncOnlineHolidays(year, force = false) {
   if(anySuccess) {
     updHolsSyncStatus('✓ Festivos nacionales actualizados · ' +
       new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
-    // Re-render only if the fetched year is the one currently shown
-    const selYr = document.getElementById('yrSel')?.value;
-    if(String(year) === String(selYr)) loadHols();
+    // loadHols() now merges ALL loaded years, so always re-render —
+    // the newly fetched year becomes visible immediately regardless
+    // of which year the selector currently shows.
+    loadHols();
   }
   return anySuccess;
 }
@@ -2951,18 +2952,48 @@ function setHolCountry(c) {
   applyHolFilter();
 }
 
+// Merge every year available for a given key prefix (e.g. 'es_nacional',
+// 'madrid') across both the hardcoded HOLS_DB and the online-fetched
+// EXTRA_HOLS_DB, deduping by date+name+country. This is what lets the
+// calendar keep showing 2026 holidays after 2027 has also been loaded —
+// years are ADDED, never replaced.
+function collectAllYears(prefix) {
+  const merged = [];
+  const seen = new Set();
+  [HOLS_DB, EXTRA_HOLS_DB].forEach(db => {
+    Object.keys(db).forEach(key => {
+      if(key === prefix || key.startsWith(prefix + '_')) {
+        (db[key] || []).forEach(h => {
+          const uniq = h.date + '|' + h.name + '|' + (h.country || '');
+          if(!seen.has(uniq)) { seen.add(uniq); merged.push(h); }
+        });
+      }
+    });
+  });
+  return merged;
+}
+
 function loadHols() {
   const reg = document.getElementById('regSel').value;
-  const yr = document.getElementById('yrSel').value;
-  if(reg==='custom') return;
-  // Prefer hardcoded HOLS_DB; fall back to online-fetched cache (EXTRA_HOLS_DB)
-  const base   = HOLS_DB[`es_nacional_${yr}`] || EXTRA_HOLS_DB[`es_nacional_${yr}`] || [];
-  const aut    = HOLS_DB[`${reg}_${yr}`] || [];  // regional: no reliable free API, hardcoded only
-  const pl     = HOLS_DB[`pl_nacional_${yr}`] || EXTRA_HOLS_DB[`pl_nacional_${yr}`] || [];
-  const custom = S.hols.filter(h=>h._custom);
+  const yr  = document.getElementById('yrSel').value;
+  if(reg==='custom') { renderCal(); renderHolList(); return; }
+
+  // National ES/PL: always the UNION of every year ever loaded/fetched —
+  // switching "Año" only changes which year gets fetched/highlighted for
+  // the hint below, it never removes previously available years.
+  const base   = collectAllYears('es_nacional');
+  const pl     = collectAllYears('pl_nacional');
+  // Regional: all years available for the SELECTED comunidad (switching
+  // comunidad still swaps the region, since only one applies to you).
+  const aut    = reg === 'nacional' ? [] : collectAllYears(reg);
+  const custom = S.hols.filter(h => h._custom);
+
   S.hols = [...base, ...aut, ...pl, ...custom];
   saveS(); renderCal(); renderHolList();
-  updRegionalHint(reg, yr, aut);
+
+  // Hint checks data for the specific selected year only
+  const autForYr = aut.filter(h => h.date.startsWith(String(yr)));
+  updRegionalHint(reg, yr, autForYr);
 }
 
 // Show a hint when the selected region has no data for the selected year
